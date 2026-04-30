@@ -1,0 +1,62 @@
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS huamaodb DEFAULT CHARSET=utf8;
+USE huamaodb;
+
+-- 1. 用户表（支持上传头像）
+CREATE TABLE user (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+    username VARCHAR(50) NOT NULL COMMENT '用户名',
+    password VARCHAR(50) NOT NULL COMMENT '密码',
+    avatar VARCHAR(255) NULL COMMENT '头像地址（上传图片路径）',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户表';
+
+-- 2. 帖子分类表
+CREATE TABLE category (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
+    name VARCHAR(50) NOT NULL COMMENT '分类名称'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='分类表';
+
+-- 3. 帖子表
+CREATE TABLE post (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '帖子ID',
+    title VARCHAR(200) NOT NULL COMMENT '标题',
+    content TEXT NOT NULL COMMENT '内容',
+    user_id INT NOT NULL COMMENT '发布人ID',
+    category_id INT NOT NULL COMMENT '分类ID',
+    like_num INT DEFAULT 0 COMMENT '点赞数',
+    comment_num INT DEFAULT 0 COMMENT '评论数',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='帖子表';
+
+-- 4. 帖子图片表（支持帖子多图）
+CREATE TABLE post_image (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '图片ID',
+    post_id INT NOT NULL COMMENT '帖子ID',
+    image_url VARCHAR(255) NOT NULL COMMENT '图片地址'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='帖子图片表';
+
+-- 5. 评论表
+CREATE TABLE comment (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '评论ID',
+    post_id INT NOT NULL COMMENT '帖子ID',
+    user_id INT NOT NULL COMMENT '评论人ID',
+    content VARCHAR(500) NOT NULL COMMENT '评论内容',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '评论时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='评论表';
+
+-- 6. 点赞表
+CREATE TABLE `like` (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '点赞ID',
+    user_id INT NOT NULL COMMENT '用户ID',
+    post_id INT NOT NULL COMMENT '帖子ID',
+    UNIQUE KEY (user_id, post_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='点赞表';
+
+-- 7. 收藏表
+CREATE TABLE collect (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '收藏ID',
+    user_id INT NOT NULL COMMENT '用户ID',
+    post_id INT NOT NULL COMMENT '帖子ID',
+    UNIQUE KEY (user_id, post_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='收藏表';
