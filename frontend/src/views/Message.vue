@@ -130,64 +130,6 @@ const loading = ref(false)
 
 const user = ref(getUser())
 
-// 模拟消息数据
-const mockMessages = [
-  { 
-    id: 1, 
-    type: 'like',
-    sender: '小明',
-    content: '赞了你的帖子',
-    postTitle: '今天天气真好',
-    createTime: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    isRead: 0
-  },
-  { 
-    id: 2, 
-    type: 'comment',
-    sender: '美食家',
-    content: '评论了你的帖子：写得真好！',
-    postTitle: '分享美食制作过程',
-    createTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    isRead: 0
-  },
-  { 
-    id: 3, 
-    type: 'follow',
-    sender: '影评人',
-    content: '关注了你',
-    postTitle: null,
-    createTime: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    isRead: 0
-  },
-  { 
-    id: 4, 
-    type: 'system',
-    sender: '系统通知',
-    content: '欢迎来到花猫论坛！在这里你可以分享生活、交流思想。',
-    postTitle: null,
-    createTime: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    isRead: 1
-  },
-  { 
-    id: 5, 
-    type: 'comment',
-    sender: '旅行者',
-    content: '评论了你的帖子：好美的地方！',
-    postTitle: '旅行日记 - 云南之旅',
-    createTime: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    isRead: 1
-  },
-  { 
-    id: 6, 
-    type: 'like',
-    sender: '摄影师',
-    content: '赞了你的帖子',
-    postTitle: '摄影技巧分享',
-    createTime: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    isRead: 1
-  }
-]
-
 const messages = ref([])
 
 const unreadMessages = computed(() => messages.value.filter(m => !m.isRead))
@@ -203,10 +145,17 @@ const goLogin = () => {
 
 const loadMessages = async () => {
   loading.value = true
-  setTimeout(() => {
-    messages.value = mockMessages
+  try {
+    const response = await messageApi.getMy(user.value.id)
+    if (response.data?.code === 200) {
+      messages.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('加载消息失败:', error)
+    messages.value = []
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 const markRead = (msg) => {

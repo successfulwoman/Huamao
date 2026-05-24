@@ -3,8 +3,8 @@
     <!-- 左侧Logo展示区域 -->
     <div class="login-left">
       <div class="logo-wrapper">
-        <img :src="LOGO_URL" alt="花猫论坛" class="logo" />
-        <h1 class="brand-title">花猫论坛</h1>
+        <img :src="LOGO_URL" alt="花猫社区" class="logo" />
+        <h1 class="brand-title">花猫社区</h1>
         <p class="brand-desc">管理后台</p>
       </div>
       <!-- 装饰元素 -->
@@ -21,7 +21,7 @@
         <!-- 登录卡片 -->
         <div class="login-card">
           <div class="admin-badge">
-            <span class="badge-icon">🛡️</span>
+            <el-icon class="badge-icon"><Shield /></el-icon>
             <span>管理员登录</span>
           </div>
           <h2 class="login-title">欢迎回来</h2>
@@ -36,7 +36,7 @@
             <div class="form-group">
               <label>管理员账号</label>
               <div class="input-wrapper">
-                <span class="input-icon">👤</span>
+                <el-icon class="input-icon"><User /></el-icon>
                 <input 
                   v-model="account" 
                   type="text" 
@@ -50,15 +50,16 @@
             <div class="form-group">
               <label>密码</label>
               <div class="input-wrapper">
-                <span class="input-icon">🔒</span>
+                <el-icon class="input-icon"><Lock /></el-icon>
                 <input 
                   v-model="password" 
-                  type="password" 
+                  :type="showPwd ? 'text' : 'password'" 
                   placeholder="请输入密码" 
                   required 
                 />
                 <button type="button" class="toggle-pwd" @click="showPwd = !showPwd">
-                  {{ showPwd ? '🙈' : '👁️' }}
+                  <el-icon v-if="showPwd"><EyeOff /></el-icon>
+                  <el-icon v-else><Eye /></el-icon>
                 </button>
               </div>
             </div>
@@ -75,13 +76,13 @@
             <!-- 登录按钮 -->
             <button type="submit" class="btn-login">
               <span>登 录</span>
-              <span class="btn-icon">→</span>
+              <el-icon class="btn-icon"><ArrowRight /></el-icon>
             </button>
           </form>
           
           <!-- 返回按钮 -->
           <button class="btn-back" @click="goBack">
-            <span>←</span>
+            <el-icon><ArrowLeft /></el-icon>
             返回首页
           </button>
         </div>
@@ -96,8 +97,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { adminApi } from '../api'
-import { setUser } from '../store'
+import { setAdmin } from '../store'
 import { Icons } from '../assets/icons'
 
 // 使用公共 Logo URL
@@ -111,6 +113,7 @@ const password = ref('')
 const rememberMe = ref(false)
 const showPwd = ref(false)
 const error = ref('')
+const loading = ref(false)
 
 // 处理登录
 const handleSubmit = async () => {
@@ -128,16 +131,25 @@ const handleSubmit = async () => {
     return
   }
   
-  // 模拟管理员登录
-  if (account.value === 'admin' && password.value === 'admin123') {
-    setUser({ 
-      id: 0, 
-      nickname: '管理员', 
-      role: 'admin' 
+  loading.value = true
+  try {
+    const res = await adminApi.login({
+      username: account.value,
+      password: password.value
     })
-    router.push('/admin')
-  } else {
-    error.value = '账号或密码错误（测试账号：admin，密码：admin123）'
+
+    if (res.data && res.data.code === 200) {
+      const adminData = res.data.data
+      setAdmin(adminData)
+      ElMessage.success('登录成功')
+      router.push('/admin')
+    } else {
+      error.value = res.data?.message || '登录失败'
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || '账号或密码错误'
+  } finally {
+    loading.value = false
   }
 }
 

@@ -43,19 +43,24 @@
 
         <!-- 分类选择 -->
         <div class="form-group">
-          <label class="form-label">
-            <el-icon class="label-icon"><PriceTag /></el-icon>
-            选择分类
-          </label>
+          <div class="label-row">
+            <label class="form-label">
+              <el-icon class="label-icon"><PriceTag /></el-icon>
+              选择分类
+            </label>
+            <button type="button" class="custom-tag-btn" @click="showCustomTagModal = true">
+              <el-icon><Plus /></el-icon>
+              <span>自定义标签</span>
+            </button>
+          </div>
           <div class="category-grid">
             <button
               v-for="category in categories"
               :key="category.id"
               type="button"
-              :class="['category-btn', { active: categoryId === category.id }]"
+              :class="['category-btn', { active: categoryId === category.id, custom: category.isCustom }]"
               @click="categoryId = category.id"
             >
-              <span class="category-icon">{{ getCategoryIcon(category.name) }}</span>
               <span class="category-name">{{ category.name }}</span>
             </button>
           </div>
@@ -110,6 +115,37 @@
           </div>
         </div>
 
+        <!-- 自定义标签弹窗 -->
+        <div v-if="showCustomTagModal" class="modal-overlay" @click.self="showCustomTagModal = false">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>添加自定义标签</h3>
+              <button class="modal-close" @click="showCustomTagModal = false">
+                <el-icon><Close /></el-icon>
+              </button>
+            </div>
+            <div class="modal-body">
+              <label class="modal-label">标签名称</label>
+              <div class="input-wrapper">
+                <span class="tag-prefix">#</span>
+                <input 
+                  v-model="customTagName" 
+                  type="text" 
+                  class="custom-tag-input"
+                  placeholder="请输入标签名称"
+                  maxlength="20"
+                  @keyup.enter="handleAddCustomTag"
+                />
+              </div>
+              <p class="modal-hint">自定义标签将以 # 开头标识</p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" @click="showCustomTagModal = false">取消</button>
+              <button class="btn btn-primary" @click="handleAddCustomTag">添加标签</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 提交按钮 -->
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" @click="goBack">
@@ -128,9 +164,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { postApi } from '../api'
+import { postApi, categoryApi } from '../api'
 import { getUser } from '../store'
-import { getCategoryIcon } from '../utils'
 // 引入 Element Plus 图标组件
 import { ArrowLeft, Document, PriceTag, Edit, Picture, Plus, Close, Loading, SuccessFilled } from '@element-plus/icons-vue'
 
@@ -157,6 +192,9 @@ const isSubmitting = ref(false)
 const isUploading = ref(false)
 // 文件输入框的DOM引用
 const fileInput = ref(null)
+// 自定义标签相关
+const showCustomTagModal = ref(false)
+const customTagName = ref('')
 
 // 获取当前登录用户信息
 const user = computed(() => getUser())
@@ -332,6 +370,50 @@ const handleSubmit = async () => {
   }
 }
 
+/**
+ * 处理添加自定义标签
+ * 用户自定义添加的标签最前面必须添加"#"作为标识
+ */
+const handleAddCustomTag = async () => {
+  const tagName = customTagName.value.trim()
+  if (!tagName) {
+    error.value = '请输入标签名称'
+    return
+  }
+  
+  if (!user.value) {
+    error.value = '请先登录'
+    return
+  }
+  
+  try {
+    // 调用后端API添加自定义标签
+    const res = await categoryApi.addCustomTag(tagName, user.value.id)
+    if (res.data.code === 200) {
+      const newTag = res.data.data
+      categories.value.push({
+        id: newTag.id,
+        name: newTag.name,
+        isCustom: newTag.isCustom === 1
+      })
+      categoryId.value = newTag.id
+      showCustomTagModal.value = false
+      customTagName.value = ''
+      success.value = '自定义标签添加成功！'
+      
+      // 3秒后清除成功提示
+      setTimeout(() => {
+        success.value = ''
+      }, 3000)
+    } else {
+      error.value = res.data.message || '添加标签失败'
+    }
+  } catch (err) {
+    error.value = '添加标签失败，请重试'
+    console.error('添加自定义标签失败:', err)
+  }
+}
+
 // 组件挂载时加载分类列表
 onMounted(() => {
   loadCategories()
@@ -436,6 +518,37 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-tag-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.custom-tag-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.custom-tag-btn:active {
+  transform: translateY(0);
+}
+
 .form-label {
   display: flex;
   align-items: center;
@@ -491,9 +604,6 @@ onMounted(() => {
 }
 
 .category-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   padding: 0.625rem 1.25rem;
   background: white;
   border: 2px solid #e5e7eb;
@@ -513,10 +623,6 @@ onMounted(() => {
   background: linear-gradient(135deg, #8b5cf6, #a855f7);
   border-color: transparent;
   color: white;
-}
-
-.category-icon {
-  font-size: 1rem;
 }
 
 /* 图片上传 */
@@ -678,6 +784,161 @@ onMounted(() => {
 }
 
 /* 响应式 */
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.tag-prefix {
+  padding: 0.875rem 1rem;
+  background: #f3f4f6;
+  color: #8b5cf6;
+  font-weight: 600;
+  font-size: 1rem;
+  border-right: 2px solid #e5e7eb;
+}
+
+.custom-tag-input {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  background: transparent;
+}
+
+.custom-tag-input::placeholder {
+  color: #9ca3af;
+}
+
+.modal-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.modal-footer .btn {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+/* 自定义标签样式 */
+.category-btn.custom {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.category-btn.custom.active {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+}
+
 @media (max-width: 640px) {
   .publish-container {
     padding: 1rem 0.5rem;

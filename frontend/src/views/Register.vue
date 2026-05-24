@@ -6,8 +6,8 @@
     <!-- 左侧Logo展示区域 -->
     <div class="register-left">
       <div class="logo-wrapper">
-        <img :src="LOGO_URL" alt="花猫论坛" class="logo" />
-        <h1 class="brand-title">花猫论坛</h1>
+        <img :src="LOGO_URL" alt="花猫社区" class="logo" />
+        <h1 class="brand-title">花猫社区</h1>
         <p class="brand-desc">分享生活，交流思想</p>
       </div>
       <!-- 装饰元素 -->
@@ -24,7 +24,7 @@
         <!-- 注册卡片 -->
         <div class="register-card">
           <h2 class="register-title">创建账号</h2>
-          <p class="register-subtitle">加入花猫论坛，开启精彩之旅</p>
+          <p class="register-subtitle">加入花猫社区，开启精彩之旅</p>
           
           <!-- 错误提示 -->
           <div v-if="error" class="alert alert-error">{{ error }}</div>
@@ -226,7 +226,7 @@ const handleSubmit = async () => {
     // 调用后端注册接口
     const res = await userApi.register({ 
       username: username.value, 
-      email: email.value,
+      useremail: email.value || null,
       password: password.value, 
       confirmPassword: confirmPassword.value 
     })

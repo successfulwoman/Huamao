@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * 花猫论坛启动类
+ * 花猫社区论坛网站启动类
  */
 @SpringBootApplication
 @MapperScan("com.example.catforum.mapper")

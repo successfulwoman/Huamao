@@ -4,7 +4,8 @@ import { reactive } from 'vue'
 const store = reactive({
   user: null,
   admin: null,
-  categories: []
+  categories: [],
+  searchKeyword: ''
 })
 
 export const setUser = (user) => {
@@ -54,5 +55,19 @@ export const setCategories = (categories) => {
 export const getCategories = () => {
   return store.categories
 }
+
+export const setSearchKeyword = (keyword) => {
+  store.searchKeyword = keyword
+}
+
+export const getSearchKeyword = () => {
+  return store.searchKeyword
+}
+
+export const clearSearchKeyword = () => {
+  store.searchKeyword = ''
+}
+
+export { store }
 
 export default store

@@ -51,6 +51,16 @@ const routes = [
     path: '/message',
     name: 'Message',
     component: () => import('../views/Message.vue')
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('../views/About.vue')
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/Search.vue')
   }
 ]
 

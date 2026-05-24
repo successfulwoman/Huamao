@@ -9,8 +9,8 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>花猫论坛</name>
-    <description>一个适合大学生课程设计/毕业设计的轻量化论坛平台</description>
+    <name>花猫社区论坛网站</name>
+    <description>花猫社区论坛网站 - 一个适合大学生课程设计/毕业设计的轻量化论坛平台</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>

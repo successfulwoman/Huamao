@@ -3,14 +3,14 @@
     <!-- 返回按钮 -->
     <div class="back-nav">
       <button class="back-btn" @click="goBack">
-        <span>←</span>
+        <el-icon><ArrowLeft /></el-icon>
         返回
       </button>
     </div>
 
     <!-- 未登录提示 -->
     <div v-if="!user" class="not-login-card">
-      <div class="not-login-icon">🔒</div>
+      <el-icon class="not-login-icon" :size="60"><Lock /></el-icon>
       <h2 class="not-login-title">请先登录</h2>
       <p class="not-login-desc">登录后即可查看和管理您的个人资料</p>
       <button class="btn btn-primary" @click="goLogin">去登录</button>
@@ -20,29 +20,29 @@
     <div v-else class="profile-card">
       <!-- 头部背景 -->
       <div class="profile-header-bg"></div>
-      
+
       <!-- 用户信息 -->
       <div class="profile-info-section">
         <div class="avatar-wrapper">
-          <img :src="user.avatar || getAvatar(user.nickname)" :alt="user.nickname" class="avatar" />
+          <img :src="getAvatar(user.avatar, user.username)" :alt="user.username" class="avatar" />
           <button class="avatar-edit-btn" @click="editAvatar">
-            <span>📷</span>
+            <el-icon><Camera /></el-icon>
           </button>
         </div>
-        
+
         <div class="user-details">
-          <h1 class="username">{{ user.nickname || '用户' }}</h1>
-          <p class="user-bio">{{ user.bio || '这个人很懒，什么都没写~' }}</p>
+          <h1 class="username">{{ user.username || '用户' }}</h1>
+          <p class="user-bio">{{ user.profile || '这个人很懒，什么都没写~' }}</p>
           <div class="user-meta">
             <span class="meta-item">
-              <span class="meta-icon">📅</span>
+              <el-icon class="meta-icon"><Calendar /></el-icon>
               加入于 {{ formatDate(user.createTime) }}
             </span>
           </div>
         </div>
 
         <button class="edit-profile-btn" @click="showEditModal = true">
-          <span>✏️</span>
+          <el-icon><Edit /></el-icon>
           编辑资料
         </button>
       </div>
@@ -50,47 +50,32 @@
       <!-- 统计数据 -->
       <div class="stats-section">
         <div class="stat-item">
-          <span class="stat-value">{{ stats.posts }}</span>
+          <span class="stat-value">{{ userPostCount }}</span>
           <span class="stat-label">帖子</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">{{ stats.followers }}</span>
-          <span class="stat-label">粉丝</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">{{ stats.following }}</span>
-          <span class="stat-label">关注</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-value">{{ stats.likes }}</span>
-          <span class="stat-label">获赞</span>
         </div>
       </div>
 
       <!-- 标签页 -->
       <div class="profile-tabs">
-        <button 
+        <button
           :class="['tab-btn', { active: activeTab === 'posts' }]"
           @click="activeTab = 'posts'"
         >
-          <span class="tab-icon">📝</span>
+          <el-icon class="tab-icon"><Document /></el-icon>
           我的帖子
         </button>
-        <button 
+        <button
           :class="['tab-btn', { active: activeTab === 'likes' }]"
           @click="activeTab = 'likes'"
         >
-          <span class="tab-icon">❤️</span>
+          <el-icon class="tab-icon"><Star /></el-icon>
           我的点赞
         </button>
-        <button 
+        <button
           :class="['tab-btn', { active: activeTab === 'collects' }]"
           @click="activeTab = 'collects'"
         >
-          <span class="tab-icon">⭐</span>
+          <el-icon class="tab-icon"><Collection /></el-icon>
           我的收藏
         </button>
       </div>
@@ -98,31 +83,33 @@
       <!-- 内容列表 -->
       <div class="content-list">
         <div v-if="loading" class="loading-state">
-          <div class="loading-spinner">⏳</div>
+          <el-icon class="loading-spinner" :size="40"><Loading /></el-icon>
           <p>加载中...</p>
         </div>
-        
+
         <div v-else-if="contentItems.length === 0" class="empty-state">
-          <div class="empty-icon">{{ activeTab === 'posts' ? '📝' : activeTab === 'likes' ? '❤️' : '⭐' }}</div>
+          <el-icon class="empty-icon" :size="50">
+            <Document v-if="activeTab === 'posts'" />
+            <Star v-else-if="activeTab === 'likes'" />
+            <Collection v-else />
+          </el-icon>
           <p class="empty-text">
             {{ activeTab === 'posts' ? '还没有发布过帖子' : activeTab === 'likes' ? '还没有点赞过帖子' : '还没有收藏过帖子' }}
           </p>
         </div>
 
-        <div v-else class="content-grid">
-          <div v-for="item in contentItems" :key="item.id" class="content-card">
-            <img v-if="item.image" :src="item.image" :alt="item.title" class="content-image" />
-            <div class="content-info">
-              <h3 class="content-title">{{ item.title }}</h3>
-              <p class="content-desc">{{ item.content }}</p>
-              <div class="content-meta">
-                <span class="meta-icon">💬</span>
-                <span>{{ item.commentCount || 0 }}</span>
-                <span class="meta-icon">❤️</span>
-                <span>{{ item.likeCount || 0 }}</span>
-              </div>
-            </div>
-          </div>
+        <div v-else class="post-grid">
+          <PostCard
+            v-for="item in contentItems"
+            :key="item.id"
+            :post="item"
+            :show-delete="activeTab === 'posts'"
+            @click="openPost(item)"
+            @like="handleLike"
+            @collect="handleCollect"
+            @comment="openPost(item)"
+            @delete="handleDelete"
+          />
         </div>
       </div>
     </div>
@@ -133,25 +120,25 @@
         <div class="edit-modal">
           <div class="modal-header">
             <h2 class="modal-title">编辑资料</h2>
-            <button class="close-btn" @click="showEditModal = false">✕</button>
+            <button class="close-btn" @click="showEditModal = false"><el-icon><Close /></el-icon></button>
           </div>
 
           <div class="modal-body">
             <div class="form-group">
-              <label class="form-label">昵称</label>
-              <input 
-                v-model="editForm.nickname" 
-                type="text" 
+              <label class="form-label">用户名</label>
+              <input
+                v-model="editForm.username"
+                type="text"
                 class="form-input"
-                placeholder="请输入昵称"
+                placeholder="请输入用户名"
                 maxlength="20"
               />
             </div>
 
             <div class="form-group">
               <label class="form-label">个人简介</label>
-              <textarea 
-                v-model="editForm.bio" 
+              <textarea
+                v-model="editForm.profile"
                 class="form-textarea"
                 placeholder="介绍一下自己吧~"
                 maxlength="100"
@@ -161,23 +148,23 @@
             <div class="form-group">
               <label class="form-label">性别</label>
               <div class="gender-options">
-                <button 
-                  :class="['gender-btn', { active: editForm.gender === 'male' }]"
-                  @click="editForm.gender = 'male'"
+                <button
+                  :class="['gender-btn', { active: editForm.gender === '男' }]"
+                  @click="editForm.gender = '男'"
                 >
-                  <span>👨</span> 男
+                  <el-icon><User /></el-icon> 男
                 </button>
-                <button 
-                  :class="['gender-btn', { active: editForm.gender === 'female' }]"
-                  @click="editForm.gender = 'female'"
+                <button
+                  :class="['gender-btn', { active: editForm.gender === '女' }]"
+                  @click="editForm.gender = '女'"
                 >
-                  <span>👩</span> 女
+                  <el-icon><User /></el-icon> 女
                 </button>
-                <button 
-                  :class="['gender-btn', { active: editForm.gender === 'secret' }]"
-                  @click="editForm.gender = 'secret'"
+                <button
+                  :class="['gender-btn', { active: editForm.gender === '未知' }]"
+                  @click="editForm.gender = '未知'"
                 >
-                  <span>🤫</span> 保密
+                  <el-icon><Hide /></el-icon> 保密
                 </button>
               </div>
             </div>
@@ -190,15 +177,24 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 帖子详情弹窗 -->
+    <PostDetail
+      :visible="showPostDetail"
+      :post="currentPost"
+      @close="closePostDetail"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { userApi, postApi } from '../api'
+import { userApi, postApi, collectApi, likeApi } from '../api'
 import { getUser, setUser } from '../store'
-import { generateAvatar, formatTime } from '../utils'
+import { getAvatar, formatTime } from '../utils'
+import PostDetail from '../components/PostDetail.vue'
+import PostCard from '../components/PostCard.vue'
 
 const router = useRouter()
 const user = ref(null)
@@ -206,40 +202,16 @@ const showEditModal = ref(false)
 const activeTab = ref('posts')
 const loading = ref(false)
 const contentItems = ref([])
+const showPostDetail = ref(false)
+const currentPost = ref(null)
 
-const stats = ref({
-  posts: 0,
-  followers: 0,
-  following: 0,
-  likes: 0
-})
+const userPostCount = ref(0)
 
 const editForm = ref({
-  nickname: '',
-  bio: '',
-  gender: 'secret'
+  username: '',
+  profile: '',
+  gender: '未知'
 })
-
-// 模拟内容数据
-const mockContent = {
-  posts: [
-    { id: 1, title: '今天天气真好', content: '出门逛逛心情棒棒的~', image: 'https://picsum.photos/200/200?random=1', commentCount: 12, likeCount: 45 },
-    { id: 2, title: '分享美食', content: '这家店的味道真不错！', image: 'https://picsum.photos/200/200?random=2', commentCount: 8, likeCount: 23 },
-    { id: 3, title: '学习笔记', content: '今天学到了很多新知识', image: null, commentCount: 5, likeCount: 18 }
-  ],
-  likes: [
-    { id: 4, title: '好看的电影推荐', content: '流浪地球真的太好看了', image: 'https://picsum.photos/200/200?random=3', commentCount: 56, likeCount: 234 },
-    { id: 5, title: '旅行日记', content: '云南之旅太美了', image: 'https://picsum.photos/200/200?random=4', commentCount: 34, likeCount: 89 }
-  ],
-  collects: [
-    { id: 6, title: '美食食谱', content: '红烧肉详细做法', image: 'https://picsum.photos/200/200?random=5', commentCount: 78, likeCount: 156 },
-    { id: 7, title: '摄影技巧', content: '如何拍出好看的照片', image: 'https://picsum.photos/200/200?random=6', commentCount: 45, likeCount: 112 }
-  ]
-}
-
-const getAvatar = (nickname) => {
-  return generateAvatar(nickname || 'User')
-}
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '未知'
@@ -286,63 +258,188 @@ const editAvatar = () => {
   input.click()
 }
 
-const saveProfile = () => {
-  if (editForm.value.nickname) {
-    user.value.nickname = editForm.value.nickname
-    user.value.bio = editForm.value.bio
-    user.value.gender = editForm.value.gender
-    setUser(user.value)
-    showEditModal.value = false
+const saveProfile = async () => {
+  if (editForm.value.username) {
+    try {
+      const response = await userApi.update({
+        id: user.value.id,
+        username: editForm.value.username,
+        profile: editForm.value.profile,
+        gender: editForm.value.gender
+      })
+      if (response.data.code === 200) {
+        user.value.username = editForm.value.username
+        user.value.profile = editForm.value.profile
+        user.value.gender = editForm.value.gender
+        setUser(user.value)
+        showEditModal.value = false
+        alert('资料更新成功！')
+      } else {
+        alert(response.data.message || '资料更新失败')
+      }
+    } catch (error) {
+      console.error('更新资料失败:', error)
+      alert('资料更新失败，请稍后重试')
+    }
   }
 }
 
-const loadUser = () => {
+const loadUser = async () => {
   const currentUser = getUser()
   if (!currentUser) {
     return
   }
-  user.value = { ...currentUser }
-  editForm.value = {
-    nickname: currentUser.nickname || '',
-    bio: currentUser.bio || '',
-    gender: currentUser.gender || 'secret'
-  }
-  // 模拟加载统计数据
-  stats.value = {
-    posts: 12,
-    followers: 88,
-    following: 56,
-    likes: 234
+  try {
+    const response = await userApi.getInfo(currentUser.id)
+    if (response.data.code === 200) {
+      user.value = response.data.data
+      setUser(response.data.data)
+      editForm.value = {
+        username: response.data.data.username || '',
+        profile: response.data.data.profile || '',
+        gender: response.data.data.gender || '未知'
+      }
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    user.value = { ...currentUser }
+    editForm.value = {
+      username: currentUser.username || '',
+      profile: currentUser.profile || '',
+      gender: currentUser.gender || '未知'
+    }
   }
 }
 
 const loadContent = async () => {
+  if (!user.value?.id) return
   loading.value = true
-  // 模拟加载
-  setTimeout(() => {
-    contentItems.value = mockContent[activeTab.value]
+  try {
+    let response
+    if (activeTab.value === 'posts') {
+      response = await postApi.getByUser(user.value.id)
+      contentItems.value = response.data?.data || []
+      userPostCount.value = contentItems.value.length
+    } else if (activeTab.value === 'likes') {
+      response = await likeApi.getMy(user.value.id)
+      contentItems.value = response.data?.data || []
+    } else if (activeTab.value === 'collects') {
+      response = await collectApi.getMy(user.value.id)
+      contentItems.value = response.data?.data || []
+    }
+  } catch (error) {
+    console.error('获取内容失败:', error)
+    contentItems.value = []
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 watch(activeTab, () => {
   loadContent()
 })
 
-onMounted(() => {
-  loadUser()
+const openPost = (post) => {
+  currentPost.value = post
+  showPostDetail.value = true
+}
+
+const closePostDetail = () => {
+  showPostDetail.value = false
+  currentPost.value = null
+}
+
+const handleLike = async (postId) => {
+  const currentUser = getUser()
+  if (!currentUser) {
+    router.push('/login')
+    return
+  }
+  try {
+    await likeApi.toggle(currentUser.id, postId)
+    loadContent()
+  } catch (error) {
+    console.error('点赞失败:', error)
+  }
+}
+
+const handleCollect = async (postId) => {
+  const currentUser = getUser()
+  if (!currentUser) {
+    router.push('/login')
+    return
+  }
+  try {
+    await collectApi.toggle(currentUser.id, postId)
+    loadContent()
+  } catch (error) {
+    console.error('收藏失败:', error)
+  }
+}
+
+const handleDelete = async (postId) => {
+  const currentUser = getUser()
+  if (!currentUser) {
+    router.push('/login')
+    return
+  }
+  
+  if (!confirm('确定要删除这篇帖子吗？')) {
+    return
+  }
+  
+  try {
+    const response = await postApi.delete(postId, currentUser.id)
+    if (response.data.code === 200) {
+      alert('帖子删除成功！')
+      loadContent()
+    } else {
+      alert(response.data.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除帖子失败:', error)
+    alert('删除帖子失败，请稍后重试')
+  }
+}
+
+onMounted(async () => {
+  await loadUser()
   loadContent()
 })
 </script>
 
 <style scoped>
 .profile-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem;
+  background: url('../assets/icons/Home2.png') no-repeat center center fixed;
+  background-size: cover;
+  box-sizing: border-box;
 }
 
-/* 返回导航 */
+.profile-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 0;
+}
+
+.profile-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-card {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .back-nav {
   margin-bottom: 1.5rem;
 }
@@ -352,8 +449,9 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   font-size: 0.9rem;
   color: #6b7280;
@@ -362,14 +460,15 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background: #f9fafb;
-  border-color: #8b5cf6;
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(139, 92, 246, 0.3);
   color: #8b5cf6;
 }
 
-/* 未登录卡片 */
 .not-login-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
   padding: 4rem 2rem;
   text-align: center;
@@ -377,7 +476,6 @@ onMounted(() => {
 }
 
 .not-login-icon {
-  font-size: 4rem;
   margin-bottom: 1rem;
 }
 
@@ -393,9 +491,10 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
-/* 个人资料卡片 */
 .profile-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(139, 92, 246, 0.1);
@@ -403,10 +502,9 @@ onMounted(() => {
 
 .profile-header-bg {
   height: 120px;
-  background: linear-gradient(135deg, #8b5cf6, #a855f7, #c084fc);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(168, 85, 247, 0.8), rgba(192, 132, 252, 0.8));
 }
 
-/* 用户信息 */
 .profile-info-section {
   display: flex;
   align-items: flex-end;
@@ -425,7 +523,7 @@ onMounted(() => {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 4px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   object-fit: cover;
 }
@@ -484,8 +582,9 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(229, 231, 235, 0.6);
   border-radius: 12px;
   font-size: 0.9rem;
   color: #6b7280;
@@ -494,18 +593,17 @@ onMounted(() => {
 }
 
 .edit-profile-btn:hover {
-  border-color: #8b5cf6;
+  border-color: rgba(139, 92, 246, 0.5);
   color: #8b5cf6;
 }
 
-/* 统计数据 */
 .stats-section {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  border-top: 1px solid #f3f4f6;
-  border-bottom: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(243, 244, 246, 0.6);
+  border-bottom: 1px solid rgba(243, 244, 246, 0.6);
 }
 
 .stat-item {
@@ -530,14 +628,13 @@ onMounted(() => {
 .stat-divider {
   width: 1px;
   height: 40px;
-  background: #e5e7eb;
+  background: rgba(229, 231, 235, 0.6);
 }
 
-/* 标签页 */
 .profile-tabs {
   display: flex;
   padding: 0 2rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(243, 244, 246, 0.6);
 }
 
 .tab-btn {
@@ -579,10 +676,8 @@ onMounted(() => {
 }
 
 .tab-icon {
-  font-size: 1rem;
 }
 
-/* 内容列表 */
 .content-list {
   padding: 1.5rem 2rem;
   min-height: 300px;
@@ -599,13 +694,10 @@ onMounted(() => {
 }
 
 .loading-spinner {
-  font-size: 2rem;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
 }
 
 .empty-icon {
-  font-size: 3rem;
   margin-bottom: 1rem;
 }
 
@@ -613,43 +705,10 @@ onMounted(() => {
   font-size: 0.95rem;
 }
 
-.content-grid {
+.post-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.content-card {
-  background: #f9fafb;
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.content-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
-}
-
-.content-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.content-info {
-  padding: 1rem;
-}
-
-.content-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .content-desc {
@@ -672,10 +731,8 @@ onMounted(() => {
 }
 
 .content-meta .meta-icon {
-  font-size: 0.9rem;
 }
 
-/* 编辑弹窗 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -691,7 +748,9 @@ onMounted(() => {
 }
 
 .edit-modal {
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   width: 100%;
   max-width: 480px;
@@ -864,7 +923,6 @@ onMounted(() => {
   }
 }
 
-/* 响应式 */
 @media (max-width: 640px) {
   .profile-container {
     padding: 1rem 0.5rem;
@@ -914,7 +972,7 @@ onMounted(() => {
     padding: 1rem;
   }
 
-  .content-grid {
+  .post-grid {
     grid-template-columns: 1fr;
   }
 }

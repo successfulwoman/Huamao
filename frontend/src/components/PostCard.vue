@@ -1,12 +1,21 @@
 <template>
   <div class="post-card" @click="handleClick">
+    <!-- 删除按钮 -->
+    <button
+      v-if="showDelete"
+      class="delete-btn"
+      @click.stop="handleDelete"
+    >
+      <el-icon :size="16"><Delete /></el-icon>
+    </button>
+
     <!-- 用户信息 -->
     <div class="post-header">
       <div class="user-info">
-        <img 
-          :src="generateAvatar(post.nickname)" 
-          :alt="post.nickname" 
-          class="user-avatar" 
+        <img
+          :src="getAvatar(post.avatar, post.nickname)"
+          :alt="post.nickname"
+          class="user-avatar"
         />
         <div class="user-detail">
           <span class="user-name">{{ post.nickname }}</span>
@@ -14,25 +23,24 @@
         </div>
       </div>
       <div class="post-category">
-        <span class="category-icon">{{ getCategoryIcon(post.categoryName) }}</span>
         <span class="category-name">{{ post.categoryName }}</span>
       </div>
     </div>
-    
+
     <!-- 帖子内容 -->
     <div class="post-content">
       <h3 class="post-title">{{ post.title }}</h3>
       <p class="post-text">{{ truncateText(post.content) }}</p>
     </div>
-    
+
     <!-- 帖子图片 -->
     <div v-if="post.imageUrls && post.imageUrls.length > 0" class="post-images">
       <div :class="getImageGridClass(post.imageUrls.length)">
-        <img 
-                v-for="(img, index) in post.imageUrls.slice(0, 9)" 
+        <img
+                v-for="(img, index) in post.imageUrls.slice(0, 9)"
                 :key="index"
                 v-lazy="img"
-                :alt="`帖子图片 ${index + 1}`" 
+                :alt="`帖子图片 ${index + 1}`"
                 class="post-image"
               />
         <div v-if="post.imageUrls.length > 9" class="image-more">
@@ -40,7 +48,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 神评论 -->
     <div v-if="post.topComment" class="top-comment">
       <div class="comment-info">
@@ -48,56 +56,122 @@
         <span class="comment-content">{{ post.topComment.content }}</span>
       </div>
     </div>
-    
+
     <!-- 互动信息 -->
     <div class="post-footer">
       <div class="interaction-stats">
         <span class="stat-item">
-          <span class="stat-icon">💬</span>
+          <el-icon class="stat-icon"><ChatLineSquare /></el-icon>
           <span class="stat-count">{{ post.commentCount }}</span>
         </span>
         <span class="stat-item">
-          <span class="stat-icon">❤️</span>
+          <el-icon class="stat-icon"><Star /></el-icon>
           <span class="stat-count">{{ post.likeCount }}</span>
         </span>
         <span class="stat-item">
-          <span class="stat-icon">⭐</span>
+          <el-icon class="stat-icon"><Collection /></el-icon>
           <span class="stat-count">{{ post.collectCount }}</span>
         </span>
       </div>
       <div class="post-actions">
-        <button 
-          class="action-btn" 
+        <button
+          class="action-btn"
           :class="{ liked: post.liked }"
           @click.stop="handleLike"
         >
-          {{ post.liked ? '❤️' : '🤍' }}
+          <el-icon :size="18" v-if="!post.liked"><Star /></el-icon>
+          <el-icon :size="18" v-else><StarFilled /></el-icon>
         </button>
-        <button 
-          class="action-btn" 
+        <button
+          class="action-btn"
           :class="{ collected: post.collected }"
           @click.stop="handleCollect"
         >
-          {{ post.collected ? '⭐' : '☆' }}
+          <el-icon :size="18" v-if="!post.collected"><Collection /></el-icon>
+          <el-icon :size="18" v-else><CollectionTag /></el-icon>
         </button>
         <button class="action-btn" @click.stop="handleComment">
-          💬
+          <el-icon :size="18"><ChatLineSquare /></el-icon>
         </button>
         <button class="action-btn" @click.stop="handleShare">
-          🔗
+          <el-icon :size="18"><Share /></el-icon>
+        </button>
+        <button class="action-btn report-btn" @click.stop="openReportModal">
+          <el-icon :size="18"><Warning /></el-icon>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- 举报弹窗 - 放在卡片外面避免事件冲突 -->
+  <Teleport to="body">
+    <div v-if="showReportModal" class="report-modal-overlay" @click="closeReportModal">
+      <div class="report-modal" @click.stop>
+        <div class="modal-header">
+          <div class="modal-icon">
+            <el-icon :size="24" color="#f59e0b"><Warning /></el-icon>
+          </div>
+          <h3>举报帖子</h3>
+          <button class="close-btn" @click="closeReportModal">
+            <el-icon :size="20"><Close /></el-icon>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="post-preview">
+            <p class="post-title-preview">{{ post.title }}</p>
+            <p class="post-content-preview">{{ truncateText(post.content) }}</p>
+          </div>
+          <div class="reason-section">
+            <label class="section-label">举报原因</label>
+            <div class="reason-options">
+              <div
+                v-for="(reason, index) in reportReasons"
+                :key="index"
+                class="reason-option"
+                :class="{ selected: selectedReason === reason.value }"
+                @click="selectReason(reason.value)"
+              >
+                <span class="reason-radio" :class="{ checked: selectedReason === reason.value }">
+                  <span v-if="selectedReason === reason.value" class="radio-inner"></span>
+                </span>
+                <span class="reason-label">{{ reason.label }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="custom-reason">
+            <label class="section-label">补充说明（选填）</label>
+            <textarea
+              v-model="customReason"
+              placeholder="请输入详细说明..."
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeReportModal">取消</button>
+          <button class="btn-submit" @click="submitReport">提交举报</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { generateAvatar, formatTime, getCategoryIcon, truncateText } from '../utils'
+import { ref } from 'vue'
+import { Delete, ChatLineSquare, Star, StarFilled, Collection, CollectionTag, Share, Warning, Close } from '@element-plus/icons-vue'
+import { getAvatar, formatTime, truncateText } from '../utils'
+import { getUser } from '../store'
+import { reportApi } from '../api'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   post: {
     type: Object,
     required: true
+  },
+  showDelete: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -106,8 +180,23 @@ const emit = defineEmits([
   'like',
   'collect',
   'comment',
-  'share'
+  'share',
+  'delete'
 ])
+
+// 举报相关状态
+const showReportModal = ref(false)
+const selectedReason = ref('')
+const customReason = ref('')
+
+const reportReasons = [
+  { label: '色情低俗', value: 'porn' },
+  { label: '暴力血腥', value: 'violence' },
+  { label: '违法违规', value: 'illegal' },
+  { label: '广告骚扰', value: 'spam' },
+  { label: '人身攻击', value: 'attack' },
+  { label: '其他', value: 'other' }
+]
 
 const handleClick = () => {
   emit('click', props.post)
@@ -127,6 +216,63 @@ const handleComment = () => {
 
 const handleShare = () => {
   emit('share', props.post)
+}
+
+const handleDelete = () => {
+  emit('delete', props.post.id)
+}
+
+const openReportModal = () => {
+  showReportModal.value = true
+  selectedReason.value = ''
+  customReason.value = ''
+}
+
+const closeReportModal = () => {
+  showReportModal.value = false
+  selectedReason.value = ''
+  customReason.value = ''
+}
+
+const selectReason = (value) => {
+  selectedReason.value = value
+}
+
+const submitReport = async () => {
+  if (!selectedReason.value) {
+    ElMessage.warning('请选择举报原因')
+    return
+  }
+
+  const user = getUser()
+  if (!user) {
+    ElMessage.warning('请先登录')
+    closeReportModal()
+    return
+  }
+
+  let reasonText = reportReasons.find(r => r.value === selectedReason.value)?.label || selectedReason.value
+  if (customReason.value) {
+    reasonText += ' - ' + customReason.value
+  }
+
+  try {
+    const response = await reportApi.addReport({
+      reportUserId: user.id,
+      postId: props.post.id,
+      reason: reasonText
+    })
+
+    if (response.data?.code === 200) {
+      ElMessage.success('举报提交成功，我们会尽快处理')
+      closeReportModal()
+    } else {
+      ElMessage.error(response.data?.message || '举报提交失败')
+    }
+  } catch (error) {
+    console.error('举报提交失败:', error)
+    ElMessage.error('举报提交失败，请稍后重试')
+  }
 }
 
 const getImageGridClass = (count) => {
@@ -151,6 +297,35 @@ const getImageGridClass = (count) => {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+}
+
+.delete-btn {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.post-card:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: var(--error-500);
+  color: white;
+  transform: scale(1.1);
 }
 
 .post-card:hover {
@@ -206,10 +381,6 @@ const getImageGridClass = (count) => {
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   color: var(--primary-700);
-}
-
-.category-icon {
-  font-size: var(--font-size-sm);
 }
 
 /* 内容区域 */
@@ -341,7 +512,6 @@ const getImageGridClass = (count) => {
 }
 
 .stat-icon {
-  font-size: var(--font-size-sm);
 }
 
 .stat-count {
@@ -383,6 +553,10 @@ const getImageGridClass = (count) => {
   animation: collectAnim 0.3s ease;
 }
 
+.action-btn.report-btn:hover {
+  color: var(--warning-500);
+}
+
 @keyframes likeAnim {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.3); }
@@ -393,33 +567,278 @@ const getImageGridClass = (count) => {
   50% { transform: scale(1.2) rotate(-10deg); }
 }
 
+/* 举报弹窗 */
+.report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.report-modal {
+  background: white;
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--gray-100);
+  position: sticky;
+  top: 0;
+  background: white;
+}
+
+.modal-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-800);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.modal-body {
+  padding: var(--spacing-4);
+}
+
+.post-preview {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.post-title-preview {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-800);
+  margin-bottom: var(--spacing-2);
+}
+
+.post-content-preview {
+  font-size: var(--font-size-sm);
+  color: var(--gray-500);
+  margin: 0;
+}
+
+.reason-section,
+.custom-reason {
+  margin-bottom: var(--spacing-4);
+}
+
+.section-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-700);
+  margin-bottom: var(--spacing-2);
+}
+
+.reason-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-2);
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 2px solid transparent;
+}
+
+.reason-option:hover {
+  background: var(--gray-100);
+}
+
+.reason-option.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--primary-400);
+}
+
+.reason-radio {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gray-300);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.reason-option.selected .reason-radio {
+  border-color: var(--primary-500);
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  background: var(--primary-500);
+  border-radius: 50%;
+}
+
+.reason-label {
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+}
+
+.custom-reason textarea {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  resize: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.custom-reason textarea:focus {
+  outline: none;
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-reason textarea::placeholder {
+  color: var(--gray-400);
+}
+
+.modal-footer {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-top: 1px solid var(--gray-100);
+}
+
+.btn-cancel,
+.btn-submit {
+  flex: 1;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.btn-cancel {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.btn-cancel:hover {
+  background: var(--gray-200);
+}
+
+.btn-submit {
+  background: var(--primary-500);
+  color: white;
+}
+
+.btn-submit:hover {
+  background: var(--primary-600);
+}
+
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .post-card {
     padding: var(--spacing-4);
   }
-  
+
   .post-title {
     font-size: var(--font-size-base);
   }
-  
+
   .user-avatar {
     width: 36px;
     height: 36px;
   }
-  
+
   .interaction-stats {
     gap: var(--spacing-3);
   }
-  
+
   .post-actions {
     gap: var(--spacing-2);
   }
-  
+
   .action-btn {
     width: 24px;
     height: 24px;
     font-size: var(--font-size-xs);
+  }
+
+  .reason-options {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

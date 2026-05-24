@@ -16,7 +16,8 @@ import Header from './components/Header.vue'
 const router = useRouter()
 
 const isAuthPage = computed(() => {
-  return ['/login', '/register', '/admin/login'].includes(router.currentRoute.value.path)
+  const path = router.currentRoute.value.path
+  return ['/login', '/register', '/admin/login'].includes(path) || path.startsWith('/admin')
 })
 </script>
 

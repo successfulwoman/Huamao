@@ -5,7 +5,7 @@
       <div class="banner-content">
         <div class="banner-bg"></div>
         <div class="banner-text">
-          <h1 class="banner-title">花猫论坛</h1>
+          <h1 class="banner-title">花猫社区</h1>
           <p class="banner-subtitle">分享生活，交流思想</p>
         </div>
       </div>
@@ -14,24 +14,58 @@
     <!-- 分类标签 -->
     <div class="category-section">
       <div class="category-list">
-        <button 
-          class="category-item" 
+        <button
+          class="category-item"
           :class="{ active: selectedCategory === null }"
           @click="selectCategory(null)"
         >
-          <span class="category-icon">🌐</span>
+          <el-icon class="category-icon"><Grid /></el-icon>
           全部
         </button>
-        <button 
-          v-for="category in categories" 
+        <!-- 显示选中的标签（最多5个） -->
+        <button
+          v-for="category in displayCategories"
           :key="category.id"
           class="category-item"
           :class="{ active: selectedCategory === category.id }"
           @click="selectCategory(category.id)"
         >
-          <span class="category-icon">{{ getCategoryIcon(category.name) }}</span>
+          <el-icon class="category-icon"><component :is="getCategoryIcon(category.name)" /></el-icon>
           {{ category.name }}
         </button>
+        <!-- 省略号按钮 -->
+        <button
+          v-if="hiddenCategories.length > 0"
+          class="category-item ellipsis-btn"
+          @click="handleEllipsisClick"
+        >
+          <el-icon class="category-icon"><More /></el-icon>
+        </button>
+      </div>
+
+      <!-- 标签选择下拉菜单 -->
+      <div v-if="showCategoryDropdown" class="category-dropdown" @click.stop>
+        <div class="dropdown-header">
+          <span>选择要展示的标签（最多5个）</span>
+          <button class="dropdown-close" @click="showCategoryDropdown = false">
+            <el-icon><Close /></el-icon>
+          </button>
+        </div>
+        <div class="dropdown-content">
+          <label
+            v-for="category in categories"
+            :key="category.id"
+            class="category-checkbox"
+          >
+            <input
+              type="checkbox"
+              :checked="selectedCategoryIds.includes(category.id)"
+              @change="toggleCategorySelection(category.id)"
+              :disabled="selectedCategoryIds.length >= 5 && !selectedCategoryIds.includes(category.id)"
+            />
+            <span>{{ category.name }}</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -42,7 +76,7 @@
           v-for="post in posts" 
           :key="post.id" 
           :post="post"
-          @click="openPostDetail"
+          @click="(post) => openPostDetail(post)"
           @like="toggleLike"
           @collect="toggleCollect"
           @comment="goDetail"
@@ -52,7 +86,7 @@
 
       <!-- 暂无帖子 -->
       <div v-if="posts.length === 0" class="empty-state">
-        <div class="empty-icon">📭</div>
+        <el-icon class="empty-icon" :size="60"><Bell /></el-icon>
         <p class="empty-text">暂无帖子，快来发布第一篇吧！</p>
       </div>
 
@@ -60,7 +94,7 @@
       <div v-if="posts.length > 0" class="load-more">
         <button class="load-more-btn" @click="loadMore">
           <span>加载更多</span>
-          <span class="load-icon">↓</span>
+          <el-icon class="load-icon"><ArrowDown /></el-icon>
         </button>
       </div>
     </div>
@@ -75,13 +109,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { categoryApi, postApi, likeApi, collectApi } from '../api'
 import { getUser, setCategories, getCategories } from '../store'
 import PostDetail from '../components/PostDetail.vue'
 import PostCard from '../components/PostCard.vue'
 import { getCategoryIcon } from '../utils'
+import { More, Close } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const posts = ref([])
@@ -93,6 +128,67 @@ const hasMore = ref(true)
 // 帖子详情弹窗
 const showDetail = ref(false)
 const currentPost = ref(null)
+
+// 标签选择相关
+const showCategoryDropdown = ref(false)
+// 用户选中的标签ID列表（最多5个），从localStorage读取或默认取前5个
+const storedCategoryIds = localStorage.getItem('selectedCategoryIds')
+const initialCategoryIds = storedCategoryIds ? (Array.isArray(JSON.parse(storedCategoryIds)) ? JSON.parse(storedCategoryIds) : []) : []
+const selectedCategoryIds = ref(initialCategoryIds)
+
+// 显示的标签（最多5个）
+const displayCategories = computed(() => {
+  if (selectedCategoryIds.value.length === 0) {
+    // 如果没有选择，默认显示前5个
+    return categories.value.slice(0, 5)
+  }
+  return categories.value.filter(cat => selectedCategoryIds.value.includes(cat.id))
+})
+
+// 隐藏的标签（超出5个的部分）
+const hiddenCategories = computed(() => {
+  if (selectedCategoryIds.value.length === 0) {
+    return categories.value.slice(5)
+  }
+  return categories.value.filter(cat => !selectedCategoryIds.value.includes(cat.id))
+})
+
+// 切换标签选择
+const toggleCategorySelection = (categoryId) => {
+  const index = selectedCategoryIds.value.indexOf(categoryId)
+  if (index > -1) {
+    // 取消选择
+    selectedCategoryIds.value.splice(index, 1)
+  } else if (selectedCategoryIds.value.length < 5) {
+    // 添加选择（最多5个）
+    selectedCategoryIds.value.push(categoryId)
+  }
+  // 保存到localStorage
+  localStorage.setItem('selectedCategoryIds', JSON.stringify(selectedCategoryIds.value))
+}
+
+// 点击省略号按钮时切换弹窗显示
+const handleEllipsisClick = () => {
+  showCategoryDropdown.value = !showCategoryDropdown.value
+}
+
+// 点击页面其他地方关闭弹窗
+const closeDropdown = (e) => {
+  const target = e.target
+  if (!target.closest('.category-section') && !target.closest('.category-dropdown')) {
+    showCategoryDropdown.value = false
+  }
+}
+
+// 点击下拉菜单内部不关闭
+const stopDropdownClose = (e) => {
+  e.stopPropagation()
+}
+
+// 处理下拉菜单滚动
+const handleDropdownScroll = (e) => {
+  // 不需要特殊处理，让浏览器默认行为生效
+}
 
 const loadCategories = async () => {
   const res = await categoryApi.getList()
@@ -283,7 +379,7 @@ const toggleLike = async (postId) => {
     router.push('/login')
     return
   }
-  await likeApi.toggle({ userId: user.id, postId })
+  await likeApi.toggle(user.id, postId)
   await loadPosts(true)
 }
 
@@ -293,7 +389,7 @@ const toggleCollect = async (postId) => {
     router.push('/login')
     return
   }
-  await collectApi.toggle({ userId: user.id, postId })
+  await collectApi.toggle(user.id, postId)
   await loadPosts(true)
 }
 
@@ -347,6 +443,11 @@ const formatDate = (dateStr) => {
 onMounted(() => {
   loadCategories()
   loadPosts()
+  document.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown)
 })
 
 watch(selectedCategory, () => {
@@ -357,13 +458,26 @@ watch(selectedCategory, () => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 30%, #fff 100%);
+  position: relative;
+  background: url('../assets/icons/Home1.png') no-repeat center center fixed;
+  background-size: cover;
+}
+
+.home-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 0;
 }
 
 /* Banner 区域 */
 .banner-section {
-  padding: 2rem 0;
-  margin-bottom: 1rem;
+  padding: 1.5rem 0;
+  margin-bottom: 0.5rem;
 }
 
 .banner-content {
@@ -411,17 +525,24 @@ watch(selectedCategory, () => {
 /* 分类区域 */
 .category-section {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: -0.5rem auto 1rem;
   padding: 0 1rem;
-  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
 }
 
 .category-list {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.6rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
   scrollbar-width: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90%;
+  position: relative;
 }
 
 .category-list::-webkit-scrollbar {
@@ -457,7 +578,99 @@ watch(selectedCategory, () => {
 }
 
 .category-icon {
-  font-size: 1rem;
+  font-size: 16px;
+}
+
+/* 省略号按钮 */
+.ellipsis-btn {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.ellipsis-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+/* 标签选择下拉菜单 */
+.category-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  min-width: 280px;
+  max-width: 360px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.dropdown-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dropdown-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.dropdown-content {
+  padding: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.category-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.category-checkbox:hover {
+  background: #f9fafb;
+}
+
+.category-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+}
+
+.category-checkbox input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.category-checkbox span {
+  font-size: 0.9rem;
+  color: #374151;
 }
 
 /* 帖子区域 */
@@ -465,6 +678,8 @@ watch(selectedCategory, () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .post-grid {
@@ -699,7 +914,6 @@ watch(selectedCategory, () => {
 }
 
 .empty-icon {
-  font-size: 4rem;
   margin-bottom: 1rem;
 }
 
@@ -739,7 +953,6 @@ watch(selectedCategory, () => {
 }
 
 .load-icon {
-  font-size: 0.85rem;
   transition: transform 0.3s ease;
 }
 

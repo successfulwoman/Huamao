@@ -3,18 +3,18 @@
     <div class="header-container">
       <!-- 左侧 Logo -->
       <div class="header-left" @click="goHome">
-        <img :src="LOGO_URL" alt="花猫论坛" class="logo" />
-        <span class="brand-name">花猫论坛</span>
+        <img :src="LOGO_URL" alt="花猫社区" class="logo" />
+        <span class="brand-name">花猫社区</span>
       </div>
 
       <!-- 中间搜索框 -->
       <div class="header-center">
         <div class="search-wrapper">
-          <span class="search-icon">🔍</span>
-          <input 
-            v-model="searchKeyword" 
-            type="text" 
-            placeholder="搜索帖子、用户..." 
+          <el-icon class="search-icon"><Search /></el-icon>
+          <input
+            v-model="searchKeyword"
+            type="text"
+            placeholder="搜索帖子、用户..."
             class="search-input"
             @keyup.enter="handleSearch"
           />
@@ -28,11 +28,11 @@
       <div class="header-right">
         <nav class="nav-links">
           <button class="nav-link" :class="{ active: currentPath === '/' }" @click="goHome">
-            <span class="nav-icon">🏠</span>
+            <el-icon class="nav-icon"><House /></el-icon>
             <span class="nav-text">首页</span>
           </button>
           <button class="nav-link" :class="{ active: currentPath === '/about' }" @click="goAbout">
-            <span class="nav-icon">📋</span>
+            <el-icon class="nav-icon"><Document /></el-icon>
             <span class="nav-text">关于论坛</span>
           </button>
         </nav>
@@ -50,32 +50,32 @@
           <template v-else>
             <div class="user-dropdown">
               <button class="user-avatar-btn">
-                <img :src="getUserAvatar(user)" :alt="user.nickname" class="user-avatar" />
+                <img :src="getAvatar(user.avatar, user.nickname)" :alt="user.nickname" class="user-avatar" />
                 <span class="user-name">{{ user.nickname }}</span>
-                <span class="dropdown-arrow">▼</span>
+                <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
               </button>
-              
+
               <!-- 下拉菜单 -->
               <div class="dropdown-menu">
                 <button class="dropdown-item" @click="goProfile">
-                  <span class="dropdown-icon">👤</span>
+                  <el-icon class="dropdown-icon"><User /></el-icon>
                   <span>个人中心</span>
                 </button>
                 <button class="dropdown-item" @click="goPostPublish">
-                  <span class="dropdown-icon">✏️</span>
+                  <el-icon class="dropdown-icon"><Edit /></el-icon>
                   <span>发布帖子</span>
                 </button>
                 <button class="dropdown-item" @click="goCollect">
-                  <span class="dropdown-icon">⭐</span>
+                  <el-icon class="dropdown-icon"><Collection /></el-icon>
                   <span>我的收藏</span>
                 </button>
                 <button class="dropdown-item" @click="goMessage">
-                  <span class="dropdown-icon">💬</span>
+                  <el-icon class="dropdown-icon"><ChatLineSquare /></el-icon>
                   <span>消息通知</span>
                 </button>
                 <div class="dropdown-divider"></div>
                 <button class="dropdown-item logout-item" @click="logout">
-                  <span class="dropdown-icon">🚪</span>
+                  <el-icon class="dropdown-icon"><SwitchButton /></el-icon>
                   <span>退出登录</span>
                 </button>
               </div>
@@ -88,9 +88,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUser, clearUser } from '../store'
+import { getUser, clearUser, store, clearSearchKeyword } from '../store'
+import { getAvatar } from '../utils'
 import { Icons } from '../assets/icons'
 
 // 使用公共 Logo URL
@@ -98,6 +99,13 @@ const LOGO_URL = Icons.logo
 
 const router = useRouter()
 const searchKeyword = ref('')
+
+// 监听 store 中的搜索关键词变化，用于清空搜索栏
+watch(() => store.searchKeyword, (newVal) => {
+  if (newVal === '') {
+    searchKeyword.value = ''
+  }
+})
 
 const user = computed(() => getUser())
 const currentPath = computed(() => router.currentRoute.value.path)
@@ -142,14 +150,11 @@ const logout = () => {
 
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
+    store.searchKeyword = searchKeyword.value
     router.push(`/search?keyword=${encodeURIComponent(searchKeyword.value)}`)
+    // 搜索后清空搜索栏
+    searchKeyword.value = ''
   }
-}
-
-const getUserAvatar = (userData) => {
-  const colors = ['#8b5cf6', '#a855f7', '#c084fc', '#d8b4fe', '#e9d5ff']
-  const index = userData?.nickname ? userData.nickname.charCodeAt(0) % colors.length : 0
-  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='${colors[index]}'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='16' font-weight='bold'%3E${userData?.nickname ? userData.nickname.charAt(0) : '?'}`
 }
 
 const closeDropdown = () => {
@@ -450,23 +455,23 @@ const closeDropdown = () => {
   .header-container {
     padding: 0 1rem;
   }
-  
+
   .header-center {
     display: none;
   }
-  
+
   .nav-text {
     display: none;
   }
-  
+
   .nav-link {
     padding: 0.5rem;
   }
-  
+
   .user-name {
     display: none;
   }
-  
+
   .brand-name {
     display: none;
   }
@@ -476,25 +481,25 @@ const closeDropdown = () => {
   .header {
     height: 60px;
   }
-  
+
   .logo {
     width: 38px;
     height: 38px;
   }
-  
+
   .user-avatar {
     width: 32px;
     height: 32px;
   }
-  
+
   .nav-links {
     gap: 0.125rem;
   }
-  
+
   .nav-link {
     padding: 0.375rem;
   }
-  
+
   .login-btn {
     padding: 0.5rem 1rem;
     font-size: 0.85rem;

@@ -3,8 +3,8 @@
     <!-- 左侧Logo展示区域 -->
     <div class="login-left">
       <div class="logo-wrapper">
-        <img :src="LOGO_URL" alt="花猫论坛" class="logo" />
-        <h1 class="brand-title">花猫论坛</h1>
+        <img :src="LOGO_URL" alt="花猫社区" class="logo" />
+        <h1 class="brand-title">花猫社区</h1>
         <p class="brand-desc">分享生活，交流思想</p>
       </div>
       <!-- 装饰元素 -->
@@ -90,7 +90,7 @@
         </div>
         
         <!-- 版权信息 -->
-        <p class="copyright">© 2024 花猫论坛 版权所有</p>
+        <p class="copyright">2026 花猫论坛 个人网站创作所有</p>
       </div>
     </div>
   </div>

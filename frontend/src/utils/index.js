@@ -7,24 +7,37 @@
  */
 export const formatTime = (dateStr) => {
   if (!dateStr) return ''
-  
+
   const date = new Date(dateStr)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
   const weeks = Math.floor(days / 7)
-  
+
   if (seconds < 60) return '刚刚'
   if (minutes < 60) return `${minutes}分钟前`
   if (hours < 24) return `${hours}小时前`
   if (days < 7) return `${days}天前`
   if (weeks < 4) return `${weeks}周前`
-  
+
   return date.toLocaleDateString('zh-CN')
+}
+
+/**
+ * 获取用户头像
+ * @param {string} avatarUrl - 用户上传的头像URL
+ * @param {string} nickname - 用户昵称
+ * @returns {string} 头像URL，优先返回真实头像，否则返回生成的默认头像
+ */
+export const getAvatar = (avatarUrl, nickname) => {
+  if (avatarUrl && avatarUrl.trim()) {
+    return avatarUrl
+  }
+  return generateAvatar(nickname)
 }
 
 /**
@@ -40,11 +53,11 @@ export const generateAvatar = (nickname) => {
     '#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5',
     '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#fef3c7'
   ]
-  
+
   const index = nickname ? nickname.charCodeAt(0) % colors.length : 0
   const color = colors[index]
   const initial = nickname ? nickname.charAt(0).toUpperCase() : '?'
-  
+
   return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='${color}'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='16' font-weight='bold'%3E${initial}%3C/text%3E%3C/svg%3E`
 }
 
@@ -64,7 +77,7 @@ export const storage = {
       console.error('Storage set error:', error)
     }
   },
-  
+
   /**
    * 获取数据
    * @param {string} key - 键
@@ -80,7 +93,7 @@ export const storage = {
       return defaultValue
     }
   },
-  
+
   /**
    * 删除数据
    * @param {string} key - 键
@@ -92,7 +105,7 @@ export const storage = {
       console.error('Storage remove error:', error)
     }
   },
-  
+
   /**
    * 清空所有数据
    */
@@ -191,23 +204,23 @@ export const truncateText = (text, maxLength = 50) => {
 /**
  * 获取分类图标
  * @param {string} categoryName - 分类名称
- * @returns {string} 图标
+ * @returns {string} 图标名称
  */
 export const getCategoryIcon = (categoryName) => {
   const iconMap = {
-    '全部': '🌐',
-    '日常': '🏠',
-    '美食': '🍔',
-    '旅行': '✈️',
-    '科技': '💻',
-    '娱乐': '🎬',
-    '学习': '📚',
-    '运动': '⚽',
-    '音乐': '🎵',
-    '电影': '🎥',
-    '游戏': '🎮'
+    '全部': 'Grid',
+    '日常': 'House',
+    '美食': 'Food',
+    '旅行': 'Plane',
+    '科技': 'Monitor',
+    '娱乐': 'Film',
+    '学习': 'Reading',
+    '运动': 'Basketball',
+    '音乐': 'Headphones',
+    '电影': 'VideoCamera',
+    '游戏': 'GameController'
   }
-  return iconMap[categoryName] || '📦'
+  return iconMap[categoryName] || 'Box'
 }
 
 /**
