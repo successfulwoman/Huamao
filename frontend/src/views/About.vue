@@ -4,7 +4,7 @@
     <section class="intro-section">
       <div class="intro-card">
         <div class="intro-header">
-          <img :src="LOGO_URL" alt="花猫社区" class="intro-logo" />
+          <img :src="LOGO_URL" alt="花猫社区" class="intro-logo" width="64" height="64" />
           <h1 class="intro-title">欢迎来到花猫社区</h1>
         </div>
         <p class="intro-desc">{{ siteDescription }}</p>

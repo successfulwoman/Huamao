@@ -13,9 +13,11 @@
     <div class="post-header">
       <div class="user-info">
         <img
-          :src="getAvatar(post.avatar, post.nickname)"
+          v-lazy="{ src: getAvatarUrl(post.avatar, post.nickname), size: 'avatar' }"
           :alt="post.nickname"
           class="user-avatar"
+          width="40"
+          height="40"
         />
         <div class="user-detail">
           <span class="user-name">{{ post.nickname }}</span>
@@ -39,9 +41,11 @@
         <img
                 v-for="(img, index) in post.imageUrls.slice(0, 9)"
                 :key="index"
-                v-lazy="img"
+                v-lazy="{ src: img, size: 'thumb' }"
                 :alt="`帖子图片 ${index + 1}`"
                 class="post-image"
+                width="200"
+                height="200"
               />
         <div v-if="post.imageUrls.length > 9" class="image-more">
           +{{ post.imageUrls.length - 9 }}
@@ -159,7 +163,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Delete, ChatLineSquare, Star, StarFilled, Collection, CollectionTag, Share, Warning, Close } from '@element-plus/icons-vue'
-import { getAvatar, formatTime, truncateText } from '../utils'
+import { getAvatar, getAvatarUrl, formatTime, truncateText } from '../utils'
 import { getUser } from '../store'
 import { reportApi } from '../api'
 import { ElMessage } from 'element-plus'

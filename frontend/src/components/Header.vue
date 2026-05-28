@@ -3,7 +3,7 @@
     <div class="header-container">
       <!-- 左侧 Logo -->
       <div class="header-left" @click="goHome">
-        <img :src="LOGO_URL" alt="花猫社区" class="logo" />
+        <img :src="LOGO_URL" alt="花猫社区" class="logo" width="45" height="45" />
         <span class="brand-name">花猫社区</span>
       </div>
 
@@ -50,7 +50,7 @@
           <template v-else>
             <div class="user-dropdown">
               <button class="user-avatar-btn">
-                <img :src="getAvatar(user.avatar, user.nickname)" :alt="user.nickname" class="user-avatar" />
+                <img v-lazy="{ src: getAvatarUrl(user.avatar, user.nickname), size: 'avatar' }" :alt="user.nickname" class="user-avatar" width="36" height="36" />
                 <span class="user-name">{{ user.nickname }}</span>
                 <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
               </button>
@@ -91,7 +91,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUser, clearUser, store, clearSearchKeyword } from '../store'
-import { getAvatar } from '../utils'
+import { getAvatar, getAvatarUrl } from '../utils'
 import { Icons } from '../assets/icons'
 
 // 使用公共 Logo URL

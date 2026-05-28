@@ -367,16 +367,24 @@ body {
   }
 }
 
-/* 图片懒加载动画 */
+/* 图片懒加载 - LQIP 模糊过渡效果 */
+.lazy-placeholder {
+  filter: blur(12px);
+  transform: scale(1.05);
+  transition: filter 0.4s ease-out, transform 0.4s ease-out;
+}
+
 .lazy-loaded {
-  animation: fadeIn 0.5s ease-in-out;
+  filter: blur(0);
+  transform: scale(1);
+  animation: lazyFadeIn 0.5s ease-in-out;
 }
 
 .lazy-error {
   filter: grayscale(100%);
 }
 
-@keyframes fadeIn {
+@keyframes lazyFadeIn {
   from {
     opacity: 0;
     transform: scale(0.95);

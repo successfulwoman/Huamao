@@ -1,5 +1,20 @@
 // 工具函数集合
 
+import { imageSize } from './imageUrl'
+
+/**
+ * 获取用户头像（带 OSS 图片处理）
+ * @param {string} avatarUrl - 用户上传的头像URL
+ * @param {string} nickname - 用户昵称
+ * @returns {string} 头像URL，优先返回处理后的 OSS 头像，否则返回生成的默认头像
+ */
+export const getAvatarUrl = (avatarUrl, nickname) => {
+  if (avatarUrl && avatarUrl.trim()) {
+    return imageSize.avatar(avatarUrl)
+  }
+  return generateAvatar(nickname)
+}
+
 /**
  * 格式化时间
  * @param {string|Date} dateStr - 时间字符串或Date对象

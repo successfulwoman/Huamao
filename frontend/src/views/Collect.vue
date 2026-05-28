@@ -52,7 +52,7 @@
             @click="selectPost(post)"
           >
             <div v-if="post.imageUrls && post.imageUrls.length > 0" class="item-image">
-              <img :src="post.imageUrls[0]" :alt="post.title" />
+              <img v-lazy="{ src: post.imageUrls[0], size: 'thumb' }" :alt="post.title" width="120" height="120" />
             </div>
             <div class="item-content">
               <h4 class="item-title">{{ post.title }}</h4>
@@ -92,7 +92,7 @@
             <h2 class="preview-title">{{ selectedPost.title }}</h2>
             
             <div class="preview-meta">
-              <img :src="getAvatar(selectedPost.avatar, selectedPost.nickname)" :alt="selectedPost.nickname" class="preview-avatar" />
+              <img v-lazy="{ src: getAvatarUrl(selectedPost.avatar, selectedPost.nickname), size: 'avatar' }" :alt="selectedPost.nickname" class="preview-avatar" width="36" height="36" />
               <span class="preview-author">{{ selectedPost.nickname }}</span>
               <span class="preview-divider">·</span>
               <span class="preview-time">{{ formatTime(selectedPost.createTime) }}</span>
@@ -106,9 +106,11 @@
                 <img 
                   v-for="(img, index) in selectedPost.imageUrls" 
                   :key="index" 
-                  :src="img" 
+                  v-lazy="{ src: img, size: 'thumb' }"
                   :alt="`图片${index + 1}`"
                   class="preview-image"
+                  width="200"
+                  height="200"
                 />
               </div>
             </div>
@@ -138,7 +140,7 @@
             <!-- 评论列表 -->
             <div v-if="comments.length > 0" class="comments-list">
               <div v-for="comment in comments" :key="comment.id" class="comment-item">
-                <img :src="getAvatar(comment.avatar, comment.nickname)" :alt="comment.nickname" class="comment-avatar" />
+                <img v-lazy="{ src: getAvatarUrl(comment.avatar, comment.nickname), size: 'avatar' }" :alt="comment.nickname" class="comment-avatar" width="36" height="36" />
                 <div class="comment-content">
                   <div class="comment-header">
                     <span class="comment-author">{{ comment.nickname }}</span>
@@ -176,7 +178,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { collectApi, likeApi, commentApi } from '../api'
 import { getUser } from '../store'
-import { getAvatar, formatTime, truncateText } from '../utils'
+import { getAvatar, getAvatarUrl, formatTime, truncateText } from '../utils'
 import { ArrowLeft, Collection, CollectionTag, Lock, Loading, Close, Document, Star, StarFilled, ArrowRight } from '@element-plus/icons-vue'
 
 const router = useRouter()

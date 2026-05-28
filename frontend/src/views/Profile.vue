@@ -24,7 +24,7 @@
       <!-- 用户信息 -->
       <div class="profile-info-section">
         <div class="avatar-wrapper">
-          <img :src="getAvatar(user.avatar, user.username)" :alt="user.username" class="avatar" />
+          <img v-lazy="{ src: getAvatarUrl(user.avatar, user.username), size: 'avatar' }" :alt="user.username" class="avatar" width="80" height="80" />
           <button class="avatar-edit-btn" @click="editAvatar">
             <el-icon><Camera /></el-icon>
           </button>
@@ -192,7 +192,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi, postApi, collectApi, likeApi } from '../api'
 import { getUser, setUser } from '../store'
-import { getAvatar, formatTime } from '../utils'
+import { getAvatar, getAvatarUrl, formatTime } from '../utils'
 import PostDetail from '../components/PostDetail.vue'
 import PostCard from '../components/PostCard.vue'
 
@@ -414,7 +414,7 @@ onMounted(async () => {
   width: 100%;
   min-height: 100vh;
   padding: 2rem;
-  background: url('../assets/icons/Home2.png') no-repeat center center fixed;
+  background: url('../assets/icons/Home2.webp') no-repeat center center fixed;
   background-size: cover;
   box-sizing: border-box;
 }

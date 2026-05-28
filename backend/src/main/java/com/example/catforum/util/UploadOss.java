@@ -12,13 +12,20 @@ import java.util.UUID;
 public class UploadOss {
     //阿里域名
     public static final String AIL_DOMAIN = "https://huamaoss.oss-cn-qingdao.aliyuncs.com/";
-    
+
     // 默认上传路径
     public static final String DEFAULT_PATH = "";
     // 帖子图片上传路径
     public static final String POST_IMAGE_PATH = "tagfileimage/";
     // 用户头像上传路径
     public static final String AVATAR_PATH = "avatar/";
+
+    // 文件大小限制
+    public static final long MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024; // 帖子图片最大 10MB
+    public static final long MAX_AVATAR_SIZE = 2 * 1024 * 1024;     // 头像最大 2MB
+
+    // 支持的图片格式
+    private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"};
 
     /**
      * 上传文件到OSS（默认路径）
@@ -36,12 +43,31 @@ public class UploadOss {
      * @return 文件URL
      */
     public static String upload(MultipartFile file, String path) throws IOException {
-        //生成文件名
+        // 验证文件名
         String originalName = file.getOriginalFilename();//原来的文件名
         if (originalName == null || !originalName.contains(".")) {
             throw new IOException("无效的文件名");
         }
+
+        // 验证文件大小
+        long maxSize = AVATAR_PATH.equals(path) ? MAX_AVATAR_SIZE : MAX_POST_IMAGE_SIZE;
+        if (file.getSize() > maxSize) {
+            throw new IOException("文件大小超过限制（最大 " + (maxSize / 1024 / 1024) + "MB）");
+        }
+
+        // 验证文件格式
         String ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();//文件后缀如.png
+        boolean formatValid = false;
+        for (String allowedExt : ALLOWED_EXTENSIONS) {
+            if (allowedExt.equals(ext)) {
+                formatValid = true;
+                break;
+            }
+        }
+        if (!formatValid) {
+            throw new IOException("不支持的图片格式，仅支持 jpg、png、gif、webp、bmp");
+        }
+
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String newFileName = uuid + ext;
         

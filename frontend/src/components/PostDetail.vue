@@ -12,9 +12,11 @@
               <img
                 v-if="post?.imageUrls?.length"
                 :key="currentImageIndex"
-                :src="currentImageUrl"
+                v-lazy="{ src: currentImageUrl, size: 'preview' }"
                 :alt="`帖子图片 ${currentImageIndex + 1}/${post.imageUrls.length}`"
                 class="post-image"
+                width="600"
+                height="400"
               />
               <div v-else class="no-image">
                 <div class="no-image-icon-wrapper">
@@ -49,7 +51,7 @@
           <div class="author-section">
             <div class="author-info">
               <div class="avatar-wrapper">
-                <img :src="getAvatar(post?.avatar, post?.nickname)" :alt="post?.nickname" class="author-avatar" />
+                <img v-lazy="{ src: getAvatarUrl(post?.avatar, post?.nickname), size: 'avatar' }" :alt="post?.nickname" class="author-avatar" width="52" height="52" />
                 <div class="avatar-ring"></div>
               </div>
               <div class="author-detail">
@@ -94,7 +96,7 @@
             <div class="comments-list">
               <div v-for="comment in comments" :key="comment.id" class="comment-item">
                 <div class="comment-avatar-wrapper">
-                  <img :src="getAvatar(comment.avatar, comment.nickname)" :alt="comment.nickname" class="comment-avatar" />
+                  <img v-lazy="{ src: getAvatarUrl(comment.avatar, comment.nickname), size: 'avatar' }" :alt="comment.nickname" class="comment-avatar" width="40" height="40" />
                 </div>
                 <div class="comment-content">
                   <div class="comment-header">
@@ -170,7 +172,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { getAvatar } from '../utils'
+import { getAvatarUrl } from '../utils'
 import { getUser } from '../store'
 import { likeApi, collectApi, commentApi } from '../api'
 import { ArrowRight, ChatLineSquare, Star, StarFilled, Share, Collection, CollectionTag } from '@element-plus/icons-vue'

@@ -4,7 +4,7 @@
     <aside class="admin-sidebar">
       <!-- Logo区域 -->
       <div class="sidebar-logo">
-        <img src="../assets/icons/Logo.png" class="logo-icon" alt="Logo" />
+        <img src="../assets/icons/Logo.webp" class="logo-icon" alt="Logo" width="40" height="40" />
         <div class="logo-text">花猫社区</div>
         <div class="logo-subtitle">管理后台</div>
       </div>
@@ -180,7 +180,7 @@
                   <td>{{ user.id }}</td>
                   <td>
                     <div class="user-info">
-                      <img :src="user.avatar || defaultAvatar" class="user-avatar" />
+                      <img v-lazy="{ src: user.avatar || defaultAvatar, size: 'avatar' }" class="user-avatar" width="40" height="40" />
                       <div class="user-text">
                         <span class="username">{{ user.username }}</span>
                         <span class="nickname">{{ user.profile || '暂无简介' }}</span>

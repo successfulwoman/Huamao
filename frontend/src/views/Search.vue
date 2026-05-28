@@ -63,7 +63,7 @@
               </div>
             </div>
             <div v-if="post.imageUrls && post.imageUrls.length > 0" class="post-preview">
-              <img :src="post.imageUrls[0]" :alt="post.title" class="preview-image" />
+              <img v-lazy="{ src: post.imageUrls[0], size: 'thumb' }" :alt="post.title" class="preview-image" width="200" height="200" />
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@
             class="user-item"
             @click="goUserProfile(user.id)"
           >
-            <img :src="user.avatar" :alt="user.nickname" class="user-avatar" />
+            <img v-lazy="{ src: getAvatarUrl(user.avatar, user.nickname), size: 'avatar' }" :alt="user.nickname" class="user-avatar" width="56" height="56" />
             <div class="user-info">
               <div class="user-name">{{ user.nickname }}</div>
               <div class="user-desc">{{ user.description || '暂无简介' }}</div>
@@ -132,6 +132,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { getAvatarUrl } from '../utils'
 import { postApi, userApi } from '../api'
 import { clearSearchKeyword } from '../store'
 import PostDetail from '../components/PostDetail.vue'

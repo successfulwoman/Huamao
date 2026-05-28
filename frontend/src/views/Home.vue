@@ -459,7 +459,7 @@ watch(selectedCategory, () => {
 .home-container {
   min-height: 100vh;
   position: relative;
-  background: url('../assets/icons/Home1.png') no-repeat center center fixed;
+  background: url('../assets/icons/Home1.webp') no-repeat center center fixed;
   background-size: cover;
 }
 

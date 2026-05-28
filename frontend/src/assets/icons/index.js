@@ -4,7 +4,7 @@
  * 官方图标库: https://developer.huawei.com/consumer/cn/design/harmonyos-icon/
  */
 
-import Logo from './Logo.png';
+import Logo from './Logo.webp';
 
 export const Icons = {
   // 通用图标
