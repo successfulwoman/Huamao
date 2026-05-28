@@ -1,7 +1,5 @@
 // 工具函数集合
 
-import { imageSize } from './imageUrl'
-
 /**
  * 获取用户头像（带 OSS 图片处理）
  * @param {string} avatarUrl - 用户上传的头像URL
@@ -10,7 +8,7 @@ import { imageSize } from './imageUrl'
  */
 export const getAvatarUrl = (avatarUrl, nickname) => {
   if (avatarUrl && avatarUrl.trim()) {
-    return imageSize.avatar(avatarUrl)
+    return avatarUrl  // 返回原始 OSS URL，由 v-lazy 指令统一处理尺寸
   }
   return generateAvatar(nickname)
 }

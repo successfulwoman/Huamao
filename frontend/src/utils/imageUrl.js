@@ -31,19 +31,19 @@ function checkWebpSupport() {
 function buildOssParams(options = {}) {
   const parts = []
   if (options.width) {
-    parts.push(`image/resize,w_${options.width}`)
+    parts.push(`resize,w_${options.width}`)
   }
   if (options.format === 'webp' && checkWebpSupport()) {
-    parts.push('image/format,webp')
+    parts.push('format,webp')
   }
   if (options.quality) {
-    parts.push(`image/quality,q_${options.quality}`)
+    parts.push(`quality,q_${options.quality}`)
   }
   if (options.blur) {
-    parts.push('image/blur,r_20,s_10')
+    parts.push('blur,r_20,s_10')
   }
   if (parts.length === 0) return ''
-  return '?x-oss-process=' + parts.join('/')
+  return '?x-oss-process=image/' + parts.join('/')
 }
 
 /**
