@@ -7,7 +7,6 @@
             <button class="nav-btn left-nav" @click="prevImage" v-if="post?.imageUrls?.length > 1">
               <span class="nav-icon">‹</span>
             </button>
-
             <div class="image-wrapper">
               <img
                 v-if="post?.imageUrls?.length"
@@ -20,17 +19,15 @@
               />
               <div v-else class="no-image">
                 <div class="no-image-icon-wrapper">
-                  <span class="no-image-icon">📷</span>
+                  <el-icon :size="48" color="#d1d5db"><Picture /></el-icon>
                 </div>
                 <span class="no-image-text">暂无图片</span>
               </div>
             </div>
-
             <button class="nav-btn right-nav" @click="nextImage" v-if="post?.imageUrls?.length > 1">
               <span class="nav-icon">›</span>
             </button>
           </div>
-
           <div v-if="post?.imageUrls?.length > 1" class="image-indicator">
             <span
               v-for="(_, index) in post.imageUrls"
@@ -39,14 +36,12 @@
               @click="setImageIndex(index)"
             ></span>
           </div>
-
           <div v-if="post?.imageUrls?.length > 1" class="image-counter">
             <span class="counter-current">{{ currentImageIndex + 1 }}</span>
             <span class="counter-separator">/</span>
             <span class="counter-total">{{ post.imageUrls.length }}</span>
           </div>
         </div>
-
         <div class="right-panel">
           <div class="author-section">
             <div class="author-info">
@@ -62,11 +57,9 @@
               </div>
             </div>
           </div>
-
           <div class="content-section">
             <h2 class="post-title">{{ post?.title }}</h2>
             <p class="post-content">{{ post?.content }}</p>
-
             <div class="post-stats" v-if="post?.likeCount || post?.commentCount || post?.collectCount">
               <div class="stat-item">
                 <el-icon><ChatLineSquare /></el-icon>
@@ -86,12 +79,10 @@
                 <span class="stat-label">收藏</span>
               </div>
             </div>
-
             <div class="post-tags" v-if="post?.tags?.length">
               <span v-for="(tag, index) in post.tags" :key="index" class="tag">#{{ tag }}</span>
             </div>
           </div>
-
           <div class="comments-section">
             <div class="comments-list">
               <div v-for="comment in comments" :key="comment.id" class="comment-item">
@@ -105,63 +96,61 @@
                   </div>
                   <p class="comment-text">{{ comment.content }}</p>
                   <div class="comment-actions">
-                    <button class="comment-action" @click="likeComment(comment.id)">
+                    <el-button size="small" text @click="likeComment(comment.id)">
                       <el-icon><Star /></el-icon>
                       <span>{{ comment.likeCount || 0 }}</span>
-                    </button>
-                    <button class="comment-action reply-btn">
+                    </el-button>
+                    <el-button size="small" text>
                       <el-icon><ChatLineSquare /></el-icon>
                       <span>回复</span>
-                    </button>
+                    </el-button>
                   </div>
                 </div>
               </div>
-
               <div v-if="comments.length === 0" class="empty-comments">
                 <el-icon class="empty-icon"><ChatLineSquare /></el-icon>
                 <span>暂无评论，快来抢沙发吧~</span>
               </div>
             </div>
           </div>
-
           <div class="bottom-section">
             <div class="comment-input-wrapper">
               <div class="input-group">
-                <input
+                <el-input
                   v-model="newComment"
-                  type="text"
+                  size="small"
                   placeholder="说点什么... (按 Enter 发送)"
                   class="comment-input"
                   @keyup.enter="submitComment"
-                />
-                <button class="send-btn" @click="submitComment" :disabled="!newComment.trim()">
-                  <el-icon><ArrowRight /></el-icon>
-                </button>
+                >
+                  <template #suffix>
+                    <el-button :icon="ArrowRight" circle size="small" type="primary" @click="submitComment" :disabled="!newComment.trim()" />
+                  </template>
+                </el-input>
               </div>
             </div>
             <div class="action-bar">
-              <button :class="['action-btn', { liked: isLiked }]" @click="toggleLike">
+              <el-button :type="isLiked ? 'danger' : 'default'" plain size="small" @click="toggleLike" class="action-bar-btn">
                 <el-icon v-if="!isLiked"><Star /></el-icon>
                 <el-icon v-else><StarFilled /></el-icon>
-                <span class="btn-text">{{ post?.likeCount || 0 }}</span>
-              </button>
-              <button :class="['action-btn', { collected: isCollected }]" @click="toggleCollect">
+                <span>{{ post?.likeCount || 0 }}</span>
+              </el-button>
+              <el-button :type="isCollected ? 'warning' : 'default'" plain size="small" @click="toggleCollect" class="action-bar-btn">
                 <el-icon v-if="!isCollected"><Collection /></el-icon>
                 <el-icon v-else><CollectionTag /></el-icon>
-                <span class="btn-text">{{ post?.collectCount || 0 }}</span>
-              </button>
-              <button class="action-btn">
+                <span>{{ post?.collectCount || 0 }}</span>
+              </el-button>
+              <el-button plain size="small" class="action-bar-btn">
                 <el-icon><ChatLineSquare /></el-icon>
-                <span class="btn-text">{{ post?.commentCount || 0 }}</span>
-              </button>
-              <button class="action-btn" @click="handleShare">
+                <span>{{ post?.commentCount || 0 }}</span>
+              </el-button>
+              <el-button plain size="small" @click="handleShare" class="action-bar-btn">
                 <el-icon><Share /></el-icon>
-                <span class="btn-text">分享</span>
-              </button>
+                <span>分享</span>
+              </el-button>
             </div>
           </div>
         </div>
-
         <button class="close-btn" @click="close">
           <span class="close-icon">✕</span>
         </button>
@@ -169,32 +158,26 @@
     </div>
   </Teleport>
 </template>
-
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { getAvatarUrl } from '../utils'
 import { getUser } from '../store'
 import { likeApi, collectApi, commentApi } from '../api'
-import { ArrowRight, ChatLineSquare, Star, StarFilled, Share, Collection, CollectionTag } from '@element-plus/icons-vue'
-
+import { ArrowRight, ChatLineSquare, Star, StarFilled, Share, Collection, CollectionTag, Picture } from '@element-plus/icons-vue'
 const props = defineProps({
   visible: Boolean,
   post: Object
 })
-
 const emit = defineEmits(['close'])
-
 const currentImageIndex = ref(0)
 const isLiked = ref(false)
 const isCollected = ref(false)
 const newComment = ref('')
 const comments = ref([])
-
 const currentImageUrl = computed(() => {
   if (!props.post?.imageUrls?.length) return ''
   return props.post.imageUrls[currentImageIndex.value] || ''
 })
-
 watch(() => props.post, (newPost) => {
   if (newPost) {
     currentImageIndex.value = 0
@@ -203,13 +186,11 @@ watch(() => props.post, (newPost) => {
     loadComments()
   }
 }, { immediate: true })
-
 watch(() => props.visible, (visible) => {
   if (visible && props.post) {
     loadComments()
   }
 })
-
 watch(() => props.visible, (visible) => {
   if (visible) {
     document.addEventListener('keydown', handleKeydown)
@@ -217,7 +198,6 @@ watch(() => props.visible, (visible) => {
     document.removeEventListener('keydown', handleKeydown)
   }
 })
-
 const handleKeydown = (e) => {
   if (!props.post?.imageUrls?.length || props.post.imageUrls.length <= 1) return
   if (e.key === 'ArrowLeft') {
@@ -226,7 +206,6 @@ const handleKeydown = (e) => {
     nextImage()
   }
 }
-
 const loadComments = async () => {
   if (!props.post?.id) return
   try {
@@ -238,25 +217,20 @@ const loadComments = async () => {
     console.error('获取评论失败:', error)
   }
 }
-
 const close = () => {
   emit('close')
 }
-
 const prevImage = () => {
   if (!props.post?.imageUrls?.length) return
   currentImageIndex.value = (currentImageIndex.value - 1 + props.post.imageUrls.length) % props.post.imageUrls.length
 }
-
 const nextImage = () => {
   if (!props.post?.imageUrls?.length) return
   currentImageIndex.value = (currentImageIndex.value + 1) % props.post.imageUrls.length
 }
-
 const setImageIndex = (index) => {
   currentImageIndex.value = index
 }
-
 const toggleLike = async () => {
   const user = getUser()
   if (!user) {
@@ -275,7 +249,6 @@ const toggleLike = async () => {
     console.error('点赞失败:', error)
   }
 }
-
 const toggleCollect = async () => {
   const user = getUser()
   if (!user) {
@@ -294,14 +267,12 @@ const toggleCollect = async () => {
     console.error('收藏失败:', error)
   }
 }
-
 const likeComment = (commentId) => {
   const comment = comments.value.find(c => c.id === commentId)
   if (comment) {
     comment.likeCount = (comment.likeCount || 0) + 1
   }
 }
-
 const submitComment = async () => {
   const user = getUser()
   if (!user) {
@@ -309,7 +280,6 @@ const submitComment = async () => {
     return
   }
   if (!newComment.value.trim()) return
-
   try {
     const response = await commentApi.add(props.post.id, user.id, newComment.value)
     if (response.data?.code === 200) {
@@ -325,10 +295,8 @@ const submitComment = async () => {
     alert('评论失败，请稍后重试')
   }
 }
-
 const formatTime = (dateString) => {
   if (!dateString) return ''
-
   let date
   if (dateString instanceof Date) {
     date = dateString
@@ -345,20 +313,16 @@ const formatTime = (dateString) => {
       }
     }
   }
-
   if (isNaN(date.getTime())) {
     return ''
   }
-
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   const hour = String(date.getHours()).padStart(2, '0')
   const minute = String(date.getMinutes()).padStart(2, '0')
-
   return `${year}-${month}-${day} ${hour}:${minute}`
 }
-
 const handleShare = () => {
   const url = window.location.origin + `/post/detail/${props.post.id}`
   if (navigator.share) {
@@ -373,695 +337,353 @@ const handleShare = () => {
   }
 }
 </script>
-
 <style scoped>
+/* ========== Overlay ========== */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(12px);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.3s ease;
+  animation: overlayIn 0.3s ease;
+  padding: var(--spacing-4);
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+/* ========== Container ========== */
 .modal-container {
   display: flex;
-  width: 95%;
-  max-width: 1150px;
-  height: 88vh;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 28px;
+  background: white;
+  border-radius: var(--radius-3xl);
   overflow: hidden;
-  position: relative;
-  box-shadow:
-    0 32px 64px -12px rgba(0, 0, 0, 0.5),
-    0 8px 24px -4px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 95vw;
+  max-width: 1100px;
+  height: 85vh;
+  max-height: 800px;
+  box-shadow: var(--shadow-2xl), 0 0 0 1px rgba(139, 92, 246, 0.1);
+  animation: modalIn 0.4s var(--transition-spring);
 }
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
+/* ========== Left Panel - Image ========== */
 .left-panel {
-  flex: 1.2;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  flex: 0 0 55%;
+  background: #0f0f0f;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.image-container {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
 }
-
-.left-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 77, 79, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.image-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 20px;
-}
-
 .image-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
-
 .post-image {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  animation: imageFadeIn 0.3s ease;
+  animation: imageFadeIn 0.4s var(--transition-smooth);
 }
-
 @keyframes imageFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
 }
-
 .no-image {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
+  gap: var(--spacing-4);
+  color: rgba(255, 255, 255, 0.4);
 }
-
 .no-image-icon-wrapper {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
 }
 
-.no-image-icon {
-  font-size: 3.5rem;
-  opacity: 0.5;
-}
-
-.no-image-text {
-  font-size: 1rem;
-  opacity: 0.6;
-  letter-spacing: 0.5px;
-}
-
+.no-image-text { font-size: var(--font-size-sm); letter-spacing: 0.05em; }
 .nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: none;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  z-index: 10;
-}
-
-.image-container:hover .nav-btn {
-  opacity: 1;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateY(-50%) scale(1.12);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-}
-
-.nav-btn:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.nav-icon {
-  font-size: 2.2rem;
-  font-weight: 300;
-  line-height: 1;
-  color: white;
-}
-
-.left-nav {
-  left: 28px;
-}
-
-.right-nav {
-  right: 28px;
-}
-
-.image-indicator {
-  position: absolute;
-  bottom: 28px;
-  display: flex;
-  gap: 10px;
   z-index: 5;
+  transition: all var(--transition-spring);
+  font-size: 20px;
 }
-
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+.nav-btn:active { transform: translateY(-50%) scale(0.95); }
+.left-nav { left: var(--spacing-3); }
+.right-nav { right: var(--spacing-3); }
+.nav-icon { font-size: 18px; font-weight: bold; }
+.image-indicator {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) 0;
+}
 .indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.3);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-smooth);
 }
-
-.indicator-dot:hover {
-  background: rgba(255, 255, 255, 0.6);
-  transform: scale(1.25);
-}
-
 .indicator-dot.active {
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff6b6b 100%);
-  width: 28px;
-  border-radius: 6px;
-  transform: scale(1);
-  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.4);
+  width: 24px;
+  border-radius: var(--radius-full);
+  background: var(--primary-400);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
 }
-
+.indicator-dot:hover:not(.active) { background: rgba(255, 255, 255, 0.6); }
 .image-counter {
   position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(12px);
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   color: white;
-  padding: 8px 20px;
-  border-radius: 24px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.05em;
   z-index: 5;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-.counter-current {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.counter-separator {
-  opacity: 0.5;
-}
-
-.counter-total {
-  opacity: 0.7;
-}
-
+.counter-separator { color: rgba(255, 255, 255, 0.4); }
+/* ========== Right Panel ========== */
 .right-panel {
-  width: 420px;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-  overflow-y: auto;
-}
-
-.author-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: white;
-}
-
-.author-info {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.avatar-wrapper {
-  position: relative;
-}
-
-.author-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid white;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.avatar-ring {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff6b6b 50%, #ffa502 100%) border-box;
-  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.avatar-wrapper:hover .avatar-ring {
-  opacity: 1;
-}
-
-.author-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.author-name {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #1a1a1a;
-  letter-spacing: -0.01em;
-}
-
-.author-meta {
-  font-size: 0.8rem;
-  color: #999;
-  letter-spacing: 0.01em;
-}
-
-.content-section {
-  padding: 24px;
-  background: white;
-}
-
-.post-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  margin-bottom: 14px;
-  color: #0a0a0a;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-}
-
-.post-content {
-  color: #4a4a4a;
-  line-height: 1.8;
-  margin-bottom: 20px;
-  font-size: 0.98rem;
-}
-
-.post-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 16px;
-  padding: 16px 0;
-  border-top: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #888;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #333;
-}
-
-.stat-label {
-  color: #999;
-  font-size: 0.8rem;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 24px;
-  background: #e8e8e8;
-}
-
-.post-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.tag {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e8f4ff 100%);
-  color: #0369a1;
-  font-size: 0.82rem;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-weight: 600;
-  border: 1px solid rgba(3, 105, 161, 0.1);
-  transition: all 0.2s ease;
-}
-
-.tag:hover {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  transform: translateY(-1px);
-}
-
-.comments-section {
-  flex: 1;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  flex: 0 0 45%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fafbfc;
+  min-width: 0;
 }
-
+.author-section {
+  padding: var(--spacing-5);
+  border-bottom: 1px solid var(--gray-100);
+  flex-shrink: 0;
+}
+.author-info { display: flex; align-items: center; gap: var(--spacing-3); }
+.avatar-wrapper { position: relative; flex-shrink: 0; }
+.author-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 3px solid var(--primary-100);
+  transition: border-color var(--transition-fast);
+}
+.avatar-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: -1;
+}
+.author-info:hover .avatar-ring { opacity: 1; }
+.author-detail { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.author-name { font-weight: var(--font-weight-bold); font-size: var(--font-size-base); color: var(--gray-800); }
+.author-meta { font-size: var(--font-size-xs); color: var(--gray-400); display: flex; align-items: center; gap: var(--spacing-1); }
+.content-section {
+  padding: var(--spacing-5);
+  flex: 1;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--gray-100);
+}
+.content-section::-webkit-scrollbar { width: 4px; }
+.content-section::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: var(--radius-full); }
+.post-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-4);
+  line-height: 1.4;
+}
+.post-content {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  line-height: 1.7;
+  margin-bottom: var(--spacing-5);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.post-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) 0;
+  margin-bottom: var(--spacing-4);
+}
+.post-stats .stat-item { display: flex; align-items: center; gap: var(--spacing-1); color: var(--gray-500); font-size: var(--font-size-xs); }
+.post-stats .stat-value { font-weight: var(--font-weight-bold); color: var(--gray-700); }
+.post-stats .stat-label { color: var(--gray-400); }
+.post-stats .stat-divider { width: 1px; height: 12px; background: var(--gray-200); }
+.post-tags { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
+.tag {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+  color: var(--primary-600);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+.tag:hover { background: linear-gradient(135deg, var(--primary-100), var(--primary-200)); transform: translateY(-1px); }
+/* ========== Comments ========== */
+.comments-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
 .comments-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 24px;
-  background: #fafbfc;
+  padding: var(--spacing-4) var(--spacing-5);
 }
-
+.comments-list::-webkit-scrollbar { width: 4px; }
+.comments-list::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: var(--radius-full); }
 .comment-item {
   display: flex;
-  padding: 18px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--gray-50);
 }
-
-.comment-item:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-.comment-avatar-wrapper {
-  flex-shrink: 0;
-}
-
+.comment-item:last-child { border-bottom: none; }
+.comment-avatar-wrapper { flex-shrink: 0; }
 .comment-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
   object-fit: cover;
-  border: 2px solid #f0f0f0;
-  transition: transform 0.2s ease;
+  border: 2px solid var(--gray-100);
 }
-
-.comment-avatar:hover {
-  transform: scale(1.05);
-}
-
-.comment-content {
-  flex: 1;
-  margin-left: 14px;
-}
-
+.comment-body { flex: 1; min-width: 0; }
 .comment-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
 }
-
-.comment-name {
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #2a2a2a;
-}
-
-.comment-time {
-  font-size: 0.78rem;
-  color: #bbb;
-}
-
-.comment-text {
-  font-size: 0.92rem;
-  color: #555;
-  line-height: 1.65;
-  margin-bottom: 10px;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 18px;
-}
-
-.comment-action {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.comment-action:hover {
-  color: #666;
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.empty-comments {
+.commenter-name { font-weight: var(--font-weight-semibold); font-size: var(--font-size-xs); color: var(--gray-800); }
+.comment-time { font-size: var(--font-size-xs); color: var(--gray-400); }
+.commenter-content { font-size: var(--font-size-sm); color: var(--gray-600); line-height: 1.5; word-break: break-word; }
+.no-comments {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #ccc;
-  gap: 12px;
+  padding: var(--spacing-8);
+  color: var(--gray-400);
+  gap: var(--spacing-2);
 }
-
-.empty-icon {
-  font-size: 3rem;
-  opacity: 0.4;
+.no-comments-icon { font-size: 40px; opacity: 0.4; }
+.no-comments-text { font-size: var(--font-size-sm); }
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .modal-container { flex-direction: column; width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+  .left-panel { flex: 0 0 45%; }
+  .right-panel { flex: 1; }
+  .post-title { font-size: var(--font-size-lg); }
+  .author-avatar { width: 42px; height: 42px; }
+  .modal-overlay { padding: 0; }
 }
-
-.bottom-section {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 20px 24px;
-  background: white;
-}
-
-.comment-input-wrapper {
-  margin-bottom: 14px;
-}
-
-.input-group {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.comment-input {
-  flex: 1;
-  padding: 14px 20px;
-  border: 2px solid #f0f0f0;
-  border-radius: 28px;
-  font-size: 0.92rem;
-  outline: none;
-  background: #fafbfc;
-  transition: all 0.3s ease;
-}
-
-.comment-input:focus {
-  border-color: #ff4d4f;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.08);
-}
-
-.comment-input::placeholder {
-  color: #bbb;
-}
-
-.send-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff6b6b 100%);
-  color: white;
-  cursor: pointer;
+/* ========== Comment Actions (Element Plus overrides) ========== */
+.comment-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.35);
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-2);
 }
-
-.send-btn:hover:not(:disabled) {
-  transform: scale(1.08);
-  box-shadow: 0 8px 28px rgba(255, 77, 79, 0.45);
+.comment-actions .el-button--small {
+  padding: 2px 6px;
+  font-size: var(--font-size-xs);
+  color: var(--gray-400);
 }
-
-.send-btn:active:not(:disabled) {
-  transform: scale(0.95);
+.comment-actions .el-button--small:hover {
+  color: var(--primary-500);
+  background: var(--gray-50);
 }
-
-.send-btn:disabled {
-  background: #e0e0e0;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
+/* ========== Action Bar (Element Plus overrides) ========== */
 .action-bar {
   display: flex;
+  align-items: center;
   justify-content: space-around;
-  padding: 10px 0;
+  padding: var(--spacing-3) var(--spacing-5);
+  border-top: 1px solid var(--gray-100);
+  gap: var(--spacing-2);
 }
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #777;
-  cursor: pointer;
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 14px;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  font-size: 0.9rem;
+.action-bar-btn.el-button--small {
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-spring);
 }
-
-.action-btn:hover {
-  color: #444;
-  background: rgba(0, 0, 0, 0.04);
+.action-bar-btn.el-button--small:hover {
+  transform: translateY(-1px);
 }
-
-.action-btn.liked {
-  color: #ff4d4f;
-  background: rgba(255, 77, 79, 0.08);
+/* ========== Comment Input (Element Plus overrides) ========== */
+.comment-input-wrapper {
+  padding: var(--spacing-3) var(--spacing-5);
+  border-top: 1px solid var(--gray-100);
 }
-
-.action-btn.collected {
-  color: #ffc107;
-  background: rgba(255, 193, 7, 0.08);
+.comment-input-wrapper .el-input {
+  --el-input-bg-color: var(--gray-50);
+  --el-input-border-color: transparent;
+  --el-input-hover-border-color: var(--primary-300);
+  --el-input-focus-border-color: var(--primary-400);
 }
-
-.btn-text {
-  font-size: 0.88rem;
+.comment-input-wrapper .el-input .el-input__wrapper {
+  border-radius: var(--radius-xl);
+  padding-right: 4px;
+  transition: all var(--transition-fast);
+  box-shadow: none;
 }
-
-.close-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.35s ease;
-  z-index: 100;
+.comment-input-wrapper .el-input .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--primary-300) inset;
 }
-
-.close-btn:hover {
-  background: rgba(0, 0, 0, 0.65);
-  transform: rotate(90deg) scale(1.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-.close-icon {
-  font-size: 1.2rem;
-  font-weight: 300;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ddd 0%, #ccc 100%);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #ccc 0%, #bbb 100%);
-}
-
-@media (max-width: 900px) {
-  .modal-container {
-    flex-direction: column;
-    width: 98%;
-    height: 95vh;
-  }
-
-  .left-panel {
-    height: 45%;
-  }
-
-  .right-panel {
-    width: 100%;
-    height: 55%;
-  }
+.comment-input-wrapper .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--primary-400) inset, 0 0 0 3px rgba(139, 92, 246, 0.1);
+  background: white;
 }
 </style>

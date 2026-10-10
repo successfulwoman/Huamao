@@ -208,6 +208,18 @@ export const validateEmail = (email) => {
  * @param {number} maxLength - 最大长度
  * @returns {string} 截断后的文本
  */
+
+/**
+ * 格式化数字（1.2k / 3.5w）
+ * @param {number} num
+ * @returns {string}
+ */
+export const formatCount = (num) => {
+  if (!num) return '0'
+  if (num >= 10000) return (num / 10000).toFixed(1).replace(/\.0$/, '') + 'w'
+  if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+  return String(num)
+}
 export const truncateText = (text, maxLength = 50) => {
   if (!text) return ''
   if (text.length <= maxLength) return text
