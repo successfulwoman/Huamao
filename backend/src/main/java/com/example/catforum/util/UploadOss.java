@@ -3,15 +3,22 @@ package com.example.catforum.util;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.ObjectMetadata;
-import com.aliyun.oss.model.PutObjectRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * 阿里云 OSS 上传工具
+ *
+ * 安全说明：AccessKey、Endpoint、Bucket、域名等敏感配置统一从
+ * application.yml 的 aliyun.oss.* 读取（支持环境变量覆盖），
+ * 严禁把真实密钥硬编码在本类中。
+ */
+@Component
 public class UploadOss {
-    //阿里域名
-    public static final String AIL_DOMAIN = "https://huamaoss.oss-cn-qingdao.aliyuncs.com/";
 
     // 默认上传路径
     public static final String DEFAULT_PATH = "";
@@ -27,12 +34,32 @@ public class UploadOss {
     // 支持的图片格式
     private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"};
 
+    /** OSS 地域节点，如 http://oss-cn-qingdao.aliyuncs.com */
+    @Value("${aliyun.oss.endpoint}")
+    private String endpoint;
+
+    /** 访问密钥 ID（从环境变量 OSS_ACCESS_KEY_ID 注入） */
+    @Value("${aliyun.oss.access-key-id}")
+    private String accessKeyId;
+
+    /** 访问密钥 Secret（从环境变量 OSS_ACCESS_KEY_SECRET 注入） */
+    @Value("${aliyun.oss.access-key-secret}")
+    private String accessKeySecret;
+
+    /** Bucket 名称 */
+    @Value("${aliyun.oss.bucket-name}")
+    private String bucketName;
+
+    /** 访问域名（用于拼接返回的图片 URL） */
+    @Value("${aliyun.oss.domain}")
+    private String domain;
+
     /**
      * 上传文件到OSS（默认路径）
      * @param file 要上传的文件
      * @return 文件URL
      */
-    public static String upload(MultipartFile file) throws IOException {
+    public String upload(MultipartFile file) throws IOException {
         return upload(file, DEFAULT_PATH);
     }
 
@@ -42,7 +69,12 @@ public class UploadOss {
      * @param path 文件存储路径（如 "tagfileimage/"）
      * @return 文件URL
      */
-    public static String upload(MultipartFile file, String path) throws IOException {
+    public String upload(MultipartFile file, String path) throws IOException {
+        // 验证密钥是否已配置
+        if (accessKeyId == null || accessKeyId.isEmpty() || accessKeySecret == null || accessKeySecret.isEmpty()) {
+            throw new IOException("OSS 密钥未配置，请设置环境变量 OSS_ACCESS_KEY_ID 和 OSS_ACCESS_KEY_SECRET");
+        }
+
         // 验证文件名
         String originalName = file.getOriginalFilename();//原来的文件名
         if (originalName == null || !originalName.contains(".")) {
@@ -70,14 +102,9 @@ public class UploadOss {
 
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String newFileName = uuid + ext;
-        
+
         // 完整的OSS存储路径（路径 + 文件名）
         String ossFilePath = (path != null ? path : "") + newFileName;
-        
-        //地域节点
-        String endpoint = "http://oss-cn-qingdao.aliyuncs.com";
-        String accessKeyId = "REDACTED_ACCESS_KEY_ID";
-        String accessKeySecret = "REDACTED_ACCESS_KEY_SECRET";
 
         //自动匹配Content-Type
         String contentType = "image/jpeg";
@@ -99,9 +126,9 @@ public class UploadOss {
             metadata.setContentType(contentType);
             // 设置Content-Disposition为inline，使图片可以直接预览而不是下载
             metadata.setContentDisposition("inline");
-            ossClient.putObject("huamaoss", ossFilePath, file.getInputStream(), metadata);
+            ossClient.putObject(bucketName, ossFilePath, file.getInputStream(), metadata);
             // 返回可直接预览的URL
-            return AIL_DOMAIN + ossFilePath;
+            return domain + ossFilePath;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

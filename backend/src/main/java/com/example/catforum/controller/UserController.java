@@ -22,6 +22,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UploadOss uploadOss;
+
     /**
      * 用户注册
      * @param user 用户对象（包含username和password）
@@ -76,7 +79,7 @@ public class UserController {
     @PostMapping("/uploadoss")
     public Result uploadoss(@RequestParam("file") MultipartFile file, @RequestParam("userId") Integer userId) throws IOException {
         // 使用AVATAR_PATH路径上传头像，确保与帖子图片分开存储
-        String avatarUrl = UploadOss.upload(file, UploadOss.AVATAR_PATH);
+        String avatarUrl = uploadOss.upload(file, UploadOss.AVATAR_PATH);
         if (avatarUrl != null) {
             userService.updateAvatar(userId, avatarUrl);
             return Result.success("头像上传成功", avatarUrl);

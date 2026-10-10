@@ -113,10 +113,35 @@ Huamao/
 
 ## 🚀 启动步骤
 
+### 0. 环境变量配置（重要）
+
+本项目**不包含任何真实密钥**，阿里云 OSS 的 AccessKey 和数据库密码都通过环境变量注入。
+启动后端前请先设置：
+
+**Windows（PowerShell）：**
+```powershell
+$env:OSS_ACCESS_KEY_ID="你的AccessKeyId"
+$env:OSS_ACCESS_KEY_SECRET="你的AccessKeySecret"
+$env:DB_USERNAME="root"        # 可选，默认 root
+$env:DB_PASSWORD="你的数据库密码"  # 可选，默认 root
+```
+
+**Linux / macOS：**
+```bash
+export OSS_ACCESS_KEY_ID="你的AccessKeyId"
+export OSS_ACCESS_KEY_SECRET="你的AccessKeySecret"
+export DB_USERNAME="root"
+export DB_PASSWORD="你的数据库密码"
+```
+
+其他可选变量：`OSS_ENDPOINT`、`OSS_BUCKET_NAME`、`OSS_DOMAIN`（不设置则使用 `application.yml` 中的默认值）。
+
+> ⚠️ 请勿把真实密钥写回代码或 `application.yml`，否则会随 Git 提交泄露。
+
 ### 1. 数据库配置
 - 创建数据库 `huamaodb`（使用utf8mb4字符集）
 - 执行 `backend/schema.sql` 初始化表结构和初始数据
-- 修改 `backend/src/main/resources/application.yml` 中的数据库连接配置
+- 数据库连接配置见 `backend/src/main/resources/application.yml`（账号密码用环境变量覆盖）
 
 ### 2. 后端启动
 - 使用 IDEA 打开 backend 目录

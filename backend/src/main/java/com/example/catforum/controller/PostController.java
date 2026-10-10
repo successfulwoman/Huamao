@@ -22,6 +22,9 @@ public class PostController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private UploadOss uploadOss;
+
     /**
      * 上传帖子图片
      * @param file 图片文件
@@ -31,7 +34,7 @@ public class PostController {
     public Result uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             // 将图片上传到OSS的tagfileimage路径下
-            String imageUrl = UploadOss.upload(file, UploadOss.POST_IMAGE_PATH);
+            String imageUrl = uploadOss.upload(file, UploadOss.POST_IMAGE_PATH);
             if (imageUrl != null) {
                 return Result.success("图片上传成功", imageUrl);
             }
